@@ -1,0 +1,37 @@
+/* src/index.css */
+
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+@font-face {
+  font-family: "KaTeX_Main";
+  src: url("https://cdn.jsdelivr.net/npm/@fontsource/stix-two-text@5.0.8/files/stix-two-text-latin-400-normal.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "KaTeX_Math";
+  src: url("https://cdn.jsdelivr.net/npm/@fontsource/stix-two-text@5.0.8/files/stix-two-text-latin-400-italic.woff2")
+    format("woff2");
+  font-style: italic;
+}
+
+body {
+  font-family: "STIX Two Text", serif;
+}
+
+.katex {
+  font-size: 1em;
+  text-indent: 0;
+  text-rendering: auto;
+}
+
+/* 保留隱藏的測量節點樣式設定 */
+#measure-node {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+  white-space: nowrap;
+  line-height: 1;
+  z-index: -1000;
+}

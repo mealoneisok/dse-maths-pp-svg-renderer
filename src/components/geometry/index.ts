@@ -1,0 +1,7 @@
+// src/components/geometry/index.ts
+
+export * from "./GeometryFrame";
+export * from "./demo/Hexagons2016_P2_23";
+export * from "./demo/Pie2012_P2_16";
+export * from "./demo/Sector2019_P2_38";
+export * from "./demo/Square2015_P1_13";
