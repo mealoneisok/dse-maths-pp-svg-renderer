@@ -25,7 +25,7 @@ export function measureLatex(
       visibility: "hidden",
       pointerEvents: "none",
       whiteSpace: "nowrap",
-      lineHeight: "1",
+      // 🌟 移除 lineHeight: "1"，因為它會強制壓縮 KaTeX 內部的對齊支架 (Strut)
       zIndex: "-1000",
     });
     document.body.appendChild(measureNode);
@@ -39,22 +39,43 @@ export function measureLatex(
       throwOnError: false,
       displayMode: false,
     });
-    const katexSpan = measureNode.querySelector(".katex");
-    const elementToMeasure = katexSpan || measureNode;
-    const rect = elementToMeasure.getBoundingClientRect();
 
-    // 計算字體下伸部 (Descender) 的額外空間
-    // 提取數值化的 fontSize (預設 16)，並取 25% 作為緩衝 (大約 4px)
-    const numericFontSize =
-      typeof fontSize === "number"
-        ? fontSize
-        : parseFloat(fontSize) || LAYOUT.DEFAULT_FONT_SIZE;
-    const descenderBuffer = numericFontSize * 0.25;
+    // --- 🌟 核心修正：計算「所有子元素」的真實視覺邊界 ---
+    // 因為 KaTeX 內部使用 absolute 定位推擠多行文字，父節點無法準確反映高度
+    const elements = measureNode.querySelectorAll("*");
+    let minTop = Infinity;
+    let maxBottom = -Infinity;
+    let minLeft = Infinity;
+    let maxRight = -Infinity;
+
+    elements.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      // 過濾掉沒有實際尺寸的元素 (例如隱藏的輔助節點)
+      if (rect.width > 0 && rect.height > 0) {
+        if (rect.top < minTop) minTop = rect.top;
+        if (rect.bottom > maxBottom) maxBottom = rect.bottom;
+        if (rect.left < minLeft) minLeft = rect.left;
+        if (rect.right > maxRight) maxRight = rect.right;
+      }
+    });
+
+    let width = 0;
+    let height = 0;
+
+    // 如果成功計算出內部元素的邊界
+    if (minTop !== Infinity && maxBottom !== -Infinity) {
+      width = maxRight - minLeft;
+      height = maxBottom - minTop;
+    } else {
+      // 備用方案：如果遇到純空白或其他無法解析的情況
+      const fallbackRect = measureNode.getBoundingClientRect();
+      width = fallbackRect.width;
+      height = fallbackRect.height;
+    }
 
     return {
-      width: Math.ceil(rect.width),
-      // 加上緩衝值，讓 ChartFrame 將 pBot 撐開，SVG 畫布就不會切到文字尾巴
-      height: Math.ceil(rect.height + descenderBuffer),
+      width: Math.ceil(width),
+      height: Math.ceil(height),
     };
   }
   return { width: 0, height: 0 };
