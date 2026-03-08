@@ -12,7 +12,7 @@ interface LabelProps {
   color?: string;
   rotation?: number;
   fontSize?: string | number;
-  debug?: boolean; // 🌟 加入 debug 屬性
+  debug?: boolean;
 }
 
 export const Label: React.FC<LabelProps> = ({
@@ -23,7 +23,7 @@ export const Label: React.FC<LabelProps> = ({
   color = LAYOUT.DEFAULT_COLOR,
   rotation = 0,
   fontSize = LAYOUT.DEFAULT_AXIS_LABEL_FONT_SIZE,
-  debug = true, // 🌟 預設開啟 debug，方便你馬上看到紅色線
+  debug = false,
 }) => {
   if (!text && text !== 0) return null;
   const strText = String(text);

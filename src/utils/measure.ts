@@ -25,7 +25,6 @@ export function measureLatex(
       visibility: "hidden",
       pointerEvents: "none",
       whiteSpace: "nowrap",
-      // 🌟 移除 lineHeight: "1"，因為它會強制壓縮 KaTeX 內部的對齊支架 (Strut)
       zIndex: "-1000",
     });
     document.body.appendChild(measureNode);
@@ -40,7 +39,7 @@ export function measureLatex(
       displayMode: false,
     });
 
-    // --- 🌟 核心修正：計算「所有子元素」的真實視覺邊界 ---
+    // --- 計算「所有子元素」的真實視覺邊界 ---
     // 因為 KaTeX 內部使用 absolute 定位推擠多行文字，父節點無法準確反映高度
     const elements = measureNode.querySelectorAll("*");
     let minTop = Infinity;

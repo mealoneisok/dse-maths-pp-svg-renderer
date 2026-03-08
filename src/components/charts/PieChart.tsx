@@ -47,6 +47,7 @@ export const PieChart: React.FC<PieChartProps> = ({
   className = "",
 }) => {
   // 透過 useMemo 快取幾何計算結果，避免頻繁呼叫 measureLatex 影響效能
+  // 透過 useMemo 快取幾何計算結果，避免頻繁呼叫 measureLatex 影響效能
   const layout = useMemo(() => {
     const p = Array.isArray(padding)
       ? padding
@@ -64,19 +65,29 @@ export const PieChart: React.FC<PieChartProps> = ({
     const minRequiredWidth = title ? titleMetrics.width + pl + pr + 8 : width;
     const actualWidth = Math.max(width, minRequiredWidth);
 
-    // 3. 扣除 Padding 後，真正可以用來畫圓的範圍
+    // --- 🌟 修正：扣除 Padding 後，預留邊框空間 ---
     const availableWidth = actualWidth - pl - pr;
     const availableHeight =
       height !== undefined ? height - effectivePt - pb : availableWidth;
 
-    // 半徑受限於可用寬高之中的最小值，保證不超出畫布
-    const r = Math.min(availableWidth, availableHeight) / 2;
+    // 定義邊框寬度 (如果你下方的 strokeWidth 改了，這裡也要對應修改)
+    const pieStrokeWidth = 1;
 
-    // 若未提供 height，則自動包裹住圓形高度
-    const actualHeight = height ?? effectivePt + r * 2 + pb;
+    // 預先扣除邊框寬度，得出安全的可用空間
+    const safeAvailableWidth = availableWidth - pieStrokeWidth;
+    const safeAvailableHeight = availableHeight - pieStrokeWidth;
 
+    // 半徑改為受限於「安全範圍」的最小值
+    const r = Math.min(safeAvailableWidth, safeAvailableHeight) / 2;
+
+    // 若未提供 height，包裹高度也必須把預留的邊框寬度加回來
+    const actualHeight = height ?? effectivePt + r * 2 + pieStrokeWidth + pb;
+
+    // cx 保持在畫布正中間
     const cx = pl + availableWidth / 2;
-    const cy = effectivePt + r; // cy 直接根據半徑與頂部距離計算即可
+
+    // cy 必須向下推移半個 strokeWidth，確保圓形的最頂部不會被削平
+    const cy = effectivePt + r + pieStrokeWidth / 2;
 
     return {
       actualWidth,

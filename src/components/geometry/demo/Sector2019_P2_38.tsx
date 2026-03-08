@@ -29,11 +29,11 @@ export const Sector2019_P2_38: React.FC = () => {
 
   // 2. 定義標籤點
   const points: GeoPoint[] = [
-    { pos: O, label: { text: "O", align: "top-right", offset: 8 } },
-    { pos: A, label: { text: "A", align: "top-left", offset: 8 } },
-    { pos: C, label: { text: "C", align: "bottom-right", offset: 8 } },
-    { pos: B, label: { text: "B", align: "bottom-left", offset: 8 } },
-    { pos: D, label: { text: "D", align: "top-left", offset: 8 } },
+    { pos: O, label: { text: "O", align: "bottom-left", offset: 5 } },
+    { pos: A, label: { text: "A", align: "bottom-right", offset: 5 } },
+    { pos: C, label: { text: "C", align: "top-left", offset: 5 } },
+    { pos: B, label: { text: "B", align: "top-right", offset: 5 } },
+    { pos: D, label: { text: "D", align: "bottom", offset: 5 } },
   ];
 
   // 3. 定義線段

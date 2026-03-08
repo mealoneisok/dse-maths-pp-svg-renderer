@@ -33,6 +33,8 @@ export const Pie2012_P2_16: React.FC = () => {
     { pos: posO, label: { text: "O", align: "top", offset: 10 } },
     { pos: posA, label: { text: "A", align: "top-left", offset: 5 } },
     { pos: posB, label: { text: "B", align: "top-right", offset: 5 } },
+    { pos: posC, label: { text: "C", align: "left", offset: 5 } },
+    { pos: posD, label: { text: "D", align: "right", offset: 5 } },
   ];
 
   // 2. 兩側線段
