@@ -19,18 +19,20 @@ export const Lines2016_P2_35: React.FC = () => {
         step: 6,
         showTickLines: false,
         tickMap: { 18: "" },
-        grid: true,
       }}
       padding={0}
       regions={[
         {
-          points: [
-            [9, 6], // P
-            [18, 6], // Q
-            [12, 12], // R
-            [6, 12], // S
+          // 1. 指定起始點 (對應原本陣列的第一個點 P)
+          start: [9, 6],
+          // 2. 指定接下來的繪製路徑 (Q -> R -> S)
+          paths: [
+            { type: "line", to: [18, 6] }, // Q
+            { type: "line", to: [12, 12] }, // R
+            { type: "line", to: [6, 12] }, // S
           ],
-          fill: "url(#default-hatch)", // 直接呼叫 Cartesian 裡定義好的 hatch ID
+          // 3. 直接使用 normalizeFill 支援的關鍵字
+          fill: "default-hatch",
         },
       ]}
       graphs={[

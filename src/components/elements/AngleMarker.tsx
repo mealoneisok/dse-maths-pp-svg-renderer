@@ -1,20 +1,10 @@
 // src/components/elements/AngleMarker.tsx
 
-import { type LabelConfig } from "./types";
+import { type AngleMarkerProps } from "./types";
 import { LAYOUT } from "../../constants";
 import { Label } from "./Label";
 import { measureLatex } from "../../utils/measure";
-
-interface AngleMarkerProps {
-  vertex: [number, number];
-  p1: [number, number];
-  p2: [number, number];
-  size?: number;
-  color?: string;
-  strokeWidth?: number;
-  isRightAngle?: boolean;
-  label?: LabelConfig & { fontSize?: number | string };
-}
+import { normalizeLabel, normalizeDash } from "../../utils/type";
 
 export const AngleMarker: React.FC<AngleMarkerProps> = ({
   vertex,
@@ -23,9 +13,12 @@ export const AngleMarker: React.FC<AngleMarkerProps> = ({
   size = 20,
   color = LAYOUT.DEFAULT_COLOR,
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
+  dash = "solid",
   isRightAngle = false,
   label,
 }) => {
+  const labelObj = normalizeLabel(label);
+  const dashArray = normalizeDash(dash);
   let angle1 = Math.atan2(p1[1] - vertex[1], p1[0] - vertex[0]);
   let angle2 = Math.atan2(p2[1] - vertex[1], p2[0] - vertex[0]);
 
@@ -48,9 +41,9 @@ export const AngleMarker: React.FC<AngleMarkerProps> = ({
   let labelX = vertex[0];
   let labelY = vertex[1];
 
-  if (label && label.text) {
+  if (labelObj && labelObj.text) {
     // 1. 測量文字大小
-    const metrics = measureLatex(label.text, label.fontSize);
+    const metrics = measureLatex(labelObj.text, labelObj.fontSize);
 
     // 2. 改用固定的視覺通關半徑
     // 通常文字的高度 (height) 是固定的，用它來推移能保證視覺上的環繞感一致。
@@ -59,7 +52,7 @@ export const AngleMarker: React.FC<AngleMarkerProps> = ({
 
     // 3. 計算基礎的圖形半徑
     const effectiveSize = isRightAngle ? size * Math.SQRT2 : size;
-    const userOffset = label.offset !== undefined ? label.offset : 4;
+    const userOffset = labelObj.offset !== undefined ? labelObj.offset : 4;
 
     // 4. 總推移距離 = 圖形半徑 + 留白 + 固定的高度空間
     const distance = effectiveSize + userOffset + textClearance;
@@ -76,6 +69,7 @@ export const AngleMarker: React.FC<AngleMarkerProps> = ({
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinejoin="round"
+          strokeDasharray={dashArray}
         />
       ) : (
         <path
@@ -83,16 +77,17 @@ export const AngleMarker: React.FC<AngleMarkerProps> = ({
           stroke={color}
           strokeWidth={strokeWidth}
           fill="none"
+          strokeDasharray={dashArray}
         />
       )}
-      {label && (
+      {labelObj && (
         <Label
-          pos={label.pos || [labelX, labelY]}
-          align={label.align || "center"}
+          pos={labelObj.pos || [labelX, labelY]}
+          align={labelObj.align || "center"}
           offset={0}
-          text={label.text}
-          color={label.color || color}
-          fontSize={label.fontSize}
+          text={labelObj.text}
+          color={labelObj.color || color}
+          fontSize={labelObj.fontSize}
         />
       )}
     </g>

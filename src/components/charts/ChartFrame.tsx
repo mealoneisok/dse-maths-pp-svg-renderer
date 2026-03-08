@@ -6,6 +6,7 @@ import { Axis, Segment, Label } from "../elements";
 import { getChartFramePadding, type AxisMetrics } from "../../utils/layout";
 import { createLinearScale } from "../../utils/scale";
 import { parseTicks } from "../../utils/ticks";
+import { normalizePadding } from "../../utils/type";
 
 export interface ChartLayoutData {
   _xAxis: ParsedAxisConfig;
@@ -51,10 +52,7 @@ function calculateLayout(
   padding: ChartFrameProps["padding"] = 0,
   borders?: ChartFrameProps["borders"],
 ): ChartLayoutData {
-  const basePadding: [number, number, number, number] = Array.isArray(padding)
-    ? padding
-    : [padding, padding, padding, padding];
-
+  const basePadding = normalizePadding(padding);
   const showYAxis = borders?.left ?? true;
   const showXAxis = borders?.bottom ?? true;
 

@@ -9,6 +9,7 @@ import {
   type ParsedAxisConfig,
 } from "../components/types";
 import { type LabelConfig, type TickValue } from "../components/elements";
+import { normalizeLabel } from "./type";
 
 export interface AxisMetrics {
   titleOffset: number;
@@ -62,11 +63,9 @@ export function getAxisMetrics(
 
   // 5. 總共需要的 Padding
   let totalPaddingReq = titleOffset;
-
-  if (axis.title) {
-    const titleText =
-      typeof axis.title === "string" ? axis.title : axis.title.text;
-    totalPaddingReq = titleOffset + measureLatex(titleText).height;
+  const titleObj = normalizeLabel(axis.title);
+  if (titleObj) {
+    totalPaddingReq = titleOffset + measureLatex(titleObj.text!).height;
   }
 
   return { titleOffset, totalPaddingRequired: totalPaddingReq };

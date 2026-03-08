@@ -1,18 +1,14 @@
 // src/components/elements/Axis.tsx
 
 import React from "react";
-import {
-  type LabelConfig,
-  type TitleConfig,
-  type GridConfig,
-  type TickValue,
-} from "./types";
+import { type LabelConfig, type GridConfig, type TickValue } from "./types";
 import { LAYOUT } from "../../constants";
 import { formatTick } from "../../utils/ticks";
 import { Arrow } from "./Arrow";
 import { Segment } from "./Segment";
 import { Label } from "./Label";
 import { RotationArrow } from "./RotationArrow";
+import { normalizeLabel } from "../../utils/type";
 
 export interface AxisProps {
   start: [number, number];
@@ -34,10 +30,11 @@ export interface AxisProps {
   grid?: GridConfig | null;
   color?: string;
   strokeWidth?: number;
+  dash?: string;
   showLabel?: boolean;
   label?: LabelConfig | string | null;
   labelStep?: number;
-  title?: TitleConfig | string | null;
+  title?: LabelConfig | string | null;
   showArrow?: boolean;
   showRotationArrow?: boolean;
 }
@@ -59,6 +56,7 @@ export const Axis: React.FC<AxisProps> = ({
   grid = null,
   color = LAYOUT.DEFAULT_COLOR,
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
+  dash = "solid",
   showLabel = true,
   label = null,
   labelStep = LAYOUT.DEFAULT_AXIS_LABEL_STEP,
@@ -87,15 +85,8 @@ export const Axis: React.FC<AxisProps> = ({
     ey + uy * extendEnd,
   ];
 
-  const endLabelObj: LabelConfig | null =
-    typeof label === "string"
-      ? { text: label, pos: actualEnd }
-      : label
-        ? { ...label, pos: label.pos || actualEnd }
-        : null;
-
-  const titleObj: TitleConfig | null =
-    typeof title === "string" ? { text: title } : title;
+  const endLabelObj = normalizeLabel(label, { pos: actualEnd });
+  const titleObj = normalizeLabel(title);
 
   let arrowX = 0,
     arrowY = 0,
@@ -127,6 +118,7 @@ export const Axis: React.FC<AxisProps> = ({
           strokeWidth={strokeWidth}
           closure={0}
           label={showLabel ? endLabelObj : null}
+          dash={dash}
         />
       ) : (
         <Segment
@@ -135,6 +127,7 @@ export const Axis: React.FC<AxisProps> = ({
           color={color}
           strokeWidth={strokeWidth}
           label={showLabel ? endLabelObj : null}
+          dash={dash}
         />
       )}
 

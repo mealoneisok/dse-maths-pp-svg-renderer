@@ -1,116 +1,47 @@
 // src/components/geometry/GeometryFrame.tsx
 
-import React, { useMemo } from "react";
+import {
+  AngleMarker,
+  Point,
+  Segment,
+  Polygon,
+  Circle,
+  Arc,
+  Region,
+  type LabelConfig,
+  type PointProps,
+  type SegmentProps,
+  type ArcProps,
+  type PolygonProps,
+  type CircleProps,
+  type AngleMarkerProps,
+  type RegionProps,
+} from "../elements";
+import { normalizeLabel, normalizePadding } from "../../utils/type";
 import { createLinearScale } from "../../utils/scale";
-import { Label } from "../elements/Label";
-import { AngleMarker } from "../elements/AngleMarker";
 import { measureLatex } from "../../utils/measure";
-
-export interface GeoLabel {
-  text: string | number;
-  align?: string;
-  offset?: number;
-  color?: string;
-  fontSize?: string | number;
-  pos?: [number, number];
-  rotation?: number;
-}
-
-export interface GeoPoint {
-  pos: [number, number];
-  showMarker?: boolean;
-  markerSize?: number;
-  markerColor?: string;
-  label?: GeoLabel;
-}
-
-export interface GeoSegment {
-  start: [number, number];
-  end: [number, number];
-  color?: string;
-  strokeWidth?: number;
-  dash?: string;
-  label?: GeoLabel;
-}
-
-export interface GeoPolygon {
-  vertices: [number, number][];
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  label?: GeoLabel;
-}
-
-export interface GeoCircle {
-  center: [number, number];
-  radius: number;
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  dash?: string;
-  label?: GeoLabel;
-}
-
-export interface GeoArc {
-  center: [number, number];
-  radius: number;
-  startAngle: number;
-  endAngle: number;
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  dash?: string;
-  label?: GeoLabel;
-}
-
-export interface GeoAngleMarker {
-  vertex: [number, number];
-  p1: [number, number];
-  p2: [number, number];
-  size?: number;
-  color?: string;
-  strokeWidth?: number;
-  isRightAngle?: boolean;
-  label?: GeoLabel;
-}
-
-export interface GeoRegionPath {
-  type: "line" | "arc";
-  to: [number, number];
-  radius?: number;
-  largeArc?: 0 | 1;
-  sweepFlag?: 0 | 1;
-}
-
-export interface GeoRegion {
-  start: [number, number];
-  paths: GeoRegionPath[];
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
-}
+import { useMemo } from "react";
 
 interface GeometryFrameProps {
   width: number;
   height?: number;
   padding?: number | [number, number, number, number];
-  points?: GeoPoint[];
-  segments?: GeoSegment[];
-  polygons?: GeoPolygon[];
-  circles?: GeoCircle[];
-  arcs?: GeoArc[];
-  angleMarkers?: GeoAngleMarker[];
-  regions?: GeoRegion[];
-  svgDefs?: React.ReactNode;
+  points?: PointProps[];
+  segments?: SegmentProps[];
+  polygons?: PolygonProps[];
+  circles?: CircleProps[];
+  arcs?: ArcProps[];
+  angleMarkers?: AngleMarkerProps[];
+  regions?: RegionProps[];
 }
 
 export const computeBoundingBox = (elements: {
-  points?: GeoPoint[];
-  segments?: GeoSegment[];
-  polygons?: GeoPolygon[];
-  circles?: GeoCircle[];
-  arcs?: GeoArc[];
-  regions?: GeoRegion[];
+  points?: PointProps[];
+  segments?: SegmentProps[];
+  polygons?: PolygonProps[];
+  circles?: CircleProps[];
+  arcs?: ArcProps[];
+  regions?: RegionProps[];
 }) => {
   let minX = Infinity,
     maxX = -Infinity,
@@ -198,7 +129,6 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
   arcs = [],
   angleMarkers = [],
   regions = [],
-  svgDefs,
 }) => {
   const layout = useMemo(() => {
     const { minX, maxX, minY, maxY } = computeBoundingBox({
@@ -237,10 +167,10 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
     });
 
     const strokePadding = maxPixelOffset / 2;
-    const basePadding = Array.isArray(padding)
-      ? padding
-      : [padding, padding, padding, padding];
-    let [pTop, pRight, pBot, pLeft] = basePadding.map((p) => p + strokePadding);
+    const basePadding = normalizePadding(padding);
+    let [pTop, pRight, pBot, pLeft] = basePadding.map(
+      (p: number) => p + strokePadding,
+    );
 
     const mathW = maxX - minX;
     const mathH = maxY - minY;
@@ -288,8 +218,9 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
     const checkLabelOverflow = (
       mathX: number,
       mathY: number,
-      labelObj?: GeoLabel,
+      rawLabel?: LabelConfig | string | null,
     ) => {
+      const labelObj = normalizeLabel(rawLabel);
       if (!labelObj || (!labelObj.text && labelObj.text !== 0)) return;
 
       const pxX = prelimScaleX(mathX);
@@ -330,43 +261,56 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
     };
 
     // 將所有可能帶有標籤的錨點丟進去測試
-    points.forEach((p) => checkLabelOverflow(p.pos[0], p.pos[1], p.label));
-    segments.forEach((s) =>
+    points.forEach((p) => {
+      const lbl = normalizeLabel(p.label);
+      checkLabelOverflow(p.pos[0], p.pos[1], lbl);
+    });
+
+    segments.forEach((s) => {
+      const lbl = normalizeLabel(s.label);
       checkLabelOverflow(
-        s.label?.pos?.[0] ?? (s.start[0] + s.end[0]) / 2,
-        s.label?.pos?.[1] ?? (s.start[1] + s.end[1]) / 2,
-        s.label,
-      ),
-    );
+        lbl?.pos?.[0] ?? (s.start[0] + s.end[0]) / 2,
+        lbl?.pos?.[1] ?? (s.start[1] + s.end[1]) / 2,
+        lbl,
+      );
+    });
+
     polygons.forEach((p) => {
-      if (!p.label) return;
+      const lbl = normalizeLabel(p.label);
+      if (!lbl) return;
       const center = p.vertices.reduce(
         (acc, v) => [acc[0] + v[0], acc[1] + v[1]],
         [0, 0],
       );
       checkLabelOverflow(
-        p.label.pos?.[0] ?? center[0] / p.vertices.length,
-        p.label.pos?.[1] ?? center[1] / p.vertices.length,
-        p.label,
+        lbl.pos?.[0] ?? center[0] / p.vertices.length,
+        lbl.pos?.[1] ?? center[1] / p.vertices.length,
+        lbl,
       );
     });
-    circles.forEach((c) =>
+
+    circles.forEach((c) => {
+      const lbl = normalizeLabel(c.label);
       checkLabelOverflow(
-        c.label?.pos?.[0] ?? c.center[0],
-        c.label?.pos?.[1] ?? c.center[1],
-        c.label,
-      ),
-    );
-    arcs.forEach((a) =>
+        lbl?.pos?.[0] ?? c.center[0],
+        lbl?.pos?.[1] ?? c.center[1],
+        lbl,
+      );
+    });
+
+    arcs.forEach((a) => {
+      const lbl = normalizeLabel(a.label);
       checkLabelOverflow(
-        a.label?.pos?.[0] ?? a.center[0],
-        a.label?.pos?.[1] ?? a.center[1],
-        a.label,
-      ),
-    );
-    angleMarkers.forEach((am) =>
-      checkLabelOverflow(am.vertex[0], am.vertex[1], am.label),
-    );
+        lbl?.pos?.[0] ?? a.center[0],
+        lbl?.pos?.[1] ?? a.center[1],
+        lbl,
+      );
+    });
+
+    angleMarkers.forEach((am) => {
+      const lbl = normalizeLabel(am.label);
+      checkLabelOverflow(am.vertex[0], am.vertex[1], lbl);
+    });
 
     // 將溢出量疊加上去，形成最終真正的 Padding
     pLeft += overflowLeft;
@@ -431,96 +375,112 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <defs>{svgDefs}</defs>
-
       {/* 0. 繪製陰影區域 */}
-      {regions.map((region, idx) => {
-        let d = `M ${layout.scaleX(region.start[0])} ${layout.scaleY(region.start[1])}`;
-        region.paths.forEach((p) => {
-          if (p.type === "line") {
-            d += ` L ${layout.scaleX(p.to[0])} ${layout.scaleY(p.to[1])}`;
-          } else if (p.type === "arc") {
-            const r = Math.abs(layout.scaleX(p.radius || 0) - layout.scaleX(0));
-            d += ` A ${r} ${r} 0 ${p.largeArc || 0} ${p.sweepFlag || 0} ${layout.scaleX(
-              p.to[0],
-            )} ${layout.scaleY(p.to[1])}`;
-          }
-        });
-        d += " Z";
+      {regions
+        .filter((r) => r && r.start && r.paths) // 防禦性過濾
+        .map((region, idx) => {
+          // 座標轉換 (Math -> Pixel)
+          const startPx: [number, number] = [
+            layout.scaleX(region.start[0]),
+            layout.scaleY(region.start[1]),
+          ];
 
-        return (
-          <path
-            key={`region-${idx}`}
-            d={d}
-            fill={region.fill || "none"}
-            stroke={region.stroke || "none"}
-            strokeWidth={region.strokeWidth || 0}
-          />
-        );
-      })}
+          const pathsPx = region.paths
+            .filter((p) => p && p.to) // 過濾無效路徑
+            .map((p) => ({
+              ...p,
+              to: [layout.scaleX(p.to[0]), layout.scaleY(p.to[1])] as [
+                number,
+                number,
+              ],
+              radius: p.radius
+                ? Math.abs(layout.scaleX(p.radius) - layout.scaleX(0))
+                : undefined,
+            }));
 
-      {/* 1. 渲染多邊形 + 標籤 */}
+          return (
+            <Region
+              key={`region-${idx}`}
+              start={startPx}
+              paths={pathsPx as any}
+              fill={region.fill}
+              stroke={region.stroke}
+              strokeWidth={region.strokeWidth}
+            />
+          );
+        })}
+
+      {/* 1. 渲染多邊形 */}
       {polygons.map((poly, idx) => {
+        const labelObj = normalizeLabel(poly.label, {});
+        const scaledVertices = poly.vertices.map(
+          (v) => [layout.scaleX(v[0]), layout.scaleY(v[1])] as [number, number],
+        );
+
         const center = poly.vertices.reduce(
           (acc, v) => [acc[0] + v[0], acc[1] + v[1]],
           [0, 0],
         );
-        const mathX = poly.label?.pos?.[0] ?? center[0] / poly.vertices.length;
-        const mathY = poly.label?.pos?.[1] ?? center[1] / poly.vertices.length;
+        const mathX = labelObj?.pos?.[0] ?? center[0] / poly.vertices.length;
+        const mathY = labelObj?.pos?.[1] ?? center[1] / poly.vertices.length;
+        const scaledLabel = labelObj
+          ? {
+              ...labelObj,
+              pos: [layout.scaleX(mathX), layout.scaleY(mathY)] as [
+                number,
+                number,
+              ],
+            }
+          : undefined;
 
         return (
-          <g key={`poly-${idx}`}>
-            <polygon
-              points={poly.vertices
-                .map((p) => `${layout.scaleX(p[0])},${layout.scaleY(p[1])}`)
-                .join(" ")}
-              fill={poly.fill || "none"}
-              stroke={poly.stroke || "#000"}
-              strokeWidth={poly.strokeWidth || 1.5}
-            />
-            {poly.label && (
-              <Label
-                pos={[layout.scaleX(mathX), layout.scaleY(mathY)]}
-                {...poly.label}
-              />
-            )}
-          </g>
+          <Polygon
+            key={`poly-${idx}`}
+            vertices={scaledVertices}
+            fill={poly.fill}
+            stroke={poly.stroke}
+            strokeWidth={poly.strokeWidth}
+            label={scaledLabel}
+          />
         );
       })}
 
-      {/* 2. 渲染圓形 + 標籤 */}
+      {/* 2. 渲染圓形 */}
       {circles.map((circle, idx) => {
+        const labelObj = normalizeLabel(circle.label);
         const cx = layout.scaleX(circle.center[0]);
         const cy = layout.scaleY(circle.center[1]);
         const r = Math.abs(
           layout.scaleX(circle.center[0] + circle.radius) - cx,
         );
+
+        const scaledLabel = labelObj
+          ? {
+              ...labelObj,
+              pos: [
+                layout.scaleX(labelObj.pos?.[0] ?? circle.center[0]),
+                layout.scaleY(labelObj.pos?.[1] ?? circle.center[1]),
+              ] as [number, number],
+            }
+          : undefined;
+
         return (
-          <g key={`circle-${idx}`}>
-            <circle
-              cx={cx}
-              cy={cy}
-              r={r}
-              fill={circle.fill || "none"}
-              stroke={circle.stroke || "#000"}
-              strokeWidth={circle.strokeWidth || 1.5}
-              strokeDasharray={circle.dash}
-            />
-            {circle.label && (
-              <Label
-                pos={[
-                  layout.scaleX(circle.label.pos?.[0] ?? circle.center[0]),
-                  layout.scaleY(circle.label.pos?.[1] ?? circle.center[1]),
-                ]}
-                {...circle.label}
-              />
-            )}
-          </g>
+          <Circle
+            key={`circle-${idx}`}
+            center={[cx, cy]}
+            radius={r}
+            fill={circle.fill}
+            stroke={circle.stroke}
+            strokeWidth={circle.strokeWidth}
+            dash={circle.dash}
+            label={scaledLabel}
+          />
         );
       })}
 
-      {/* 3. 渲染圓弧 + 標籤 */}
+      {/* 3. 渲染圓弧 */}
       {arcs.map((arc, idx) => {
+        const labelObj = normalizeLabel(arc.label);
         const rx = Math.abs(
           layout.scaleX(arc.center[0] + arc.radius) -
             layout.scaleX(arc.center[0]),
@@ -529,7 +489,6 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           layout.scaleY(arc.center[1] + arc.radius) -
             layout.scaleY(arc.center[1]),
         );
-
         const sx = layout.scaleX(
           arc.center[0] + arc.radius * Math.cos(arc.startAngle),
         );
@@ -546,56 +505,66 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         let diff = arc.endAngle - arc.startAngle;
         while (diff < 0) diff += 2 * Math.PI;
         const largeArc = diff > Math.PI ? 1 : 0;
-        const sweep = 0;
+
+        const scaledLabel = labelObj
+          ? {
+              ...labelObj,
+              pos: [
+                layout.scaleX(labelObj.pos?.[0] ?? arc.center[0]),
+                layout.scaleY(labelObj.pos?.[1] ?? arc.center[1]),
+              ] as [number, number],
+            }
+          : undefined;
 
         return (
-          <g key={`arc-${idx}`}>
-            <path
-              d={`M ${sx} ${sy} A ${rx} ${ry} 0 ${largeArc} ${sweep} ${ex} ${ey}`}
-              fill={arc.fill || "none"}
-              stroke={arc.stroke || "#000"}
-              strokeWidth={arc.strokeWidth || 1.5}
-              strokeDasharray={arc.dash}
-            />
-            {arc.label && (
-              <Label
-                pos={[
-                  layout.scaleX(arc.label.pos?.[0] ?? arc.center[0]),
-                  layout.scaleY(arc.label.pos?.[1] ?? arc.center[1]),
-                ]}
-                {...arc.label}
-              />
-            )}
-          </g>
+          <Arc
+            key={`arc-${idx}`}
+            center={[
+              layout.scaleX(arc.center[0]),
+              layout.scaleY(arc.center[1]),
+            ]}
+            radius={rx} // 傳遞 Dummy 以符合介面要求，真正的繪圖使用 _svgParams
+            startAngle={arc.startAngle}
+            endAngle={arc.endAngle}
+            _svgParams={{ sx, sy, ex, ey, rx, ry, largeArc, sweep: 0 }}
+            fill={arc.fill}
+            stroke={arc.stroke}
+            strokeWidth={arc.strokeWidth}
+            dash={arc.dash}
+            label={scaledLabel}
+          />
         );
       })}
 
-      {/* 4. 渲染線段 + 標籤 */}
+      {/* 4. 渲染線段 */}
       {segments.map((seg, idx) => {
-        const mathX = seg.label?.pos?.[0] ?? (seg.start[0] + seg.end[0]) / 2;
-        const mathY = seg.label?.pos?.[1] ?? (seg.start[1] + seg.end[1]) / 2;
+        const labelObj = normalizeLabel(seg.label);
+        const mathX = labelObj?.pos?.[0] ?? (seg.start[0] + seg.end[0]) / 2;
+        const mathY = labelObj?.pos?.[1] ?? (seg.start[1] + seg.end[1]) / 2;
+        const scaledLabel = labelObj
+          ? {
+              ...labelObj,
+              pos: [layout.scaleX(mathX), layout.scaleY(mathY)] as [
+                number,
+                number,
+              ],
+            }
+          : undefined;
+
         return (
-          <g key={`seg-${idx}`}>
-            <line
-              x1={layout.scaleX(seg.start[0])}
-              y1={layout.scaleY(seg.start[1])}
-              x2={layout.scaleX(seg.end[0])}
-              y2={layout.scaleY(seg.end[1])}
-              stroke={seg.color || "#000"}
-              strokeWidth={seg.strokeWidth || 1.5}
-              strokeDasharray={seg.dash}
-            />
-            {seg.label && (
-              <Label
-                pos={[layout.scaleX(mathX), layout.scaleY(mathY)]}
-                {...seg.label}
-              />
-            )}
-          </g>
+          <Segment
+            key={`seg-${idx}`}
+            start={[layout.scaleX(seg.start[0]), layout.scaleY(seg.start[1])]}
+            end={[layout.scaleX(seg.end[0]), layout.scaleY(seg.end[1])]}
+            strokeWidth={seg.strokeWidth}
+            color={seg.color}
+            dash={seg.dash}
+            label={scaledLabel}
+          />
         );
       })}
 
-      {/* 5. 渲染角度標記 ( AngleMarker 內部自己會渲染 Label ) */}
+      {/* 5. 渲染角度標記 (未變動) */}
       {angleMarkers.map((am, idx) => (
         <AngleMarker
           key={`am-${idx}`}
@@ -612,22 +581,27 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
 
       {/* 6. 渲染點與標籤 */}
       {points.map((pt, idx) => {
-        const x = layout.scaleX(pt.pos[0]);
-        const y = layout.scaleY(pt.pos[1]);
+        const labelObj = normalizeLabel(pt.label);
+        const pxX = layout.scaleX(pt.pos[0]);
+        const pxY = layout.scaleY(pt.pos[1]);
+        const scaledLabel = labelObj
+          ? {
+              ...labelObj,
+              pos: [pxX, pxY] as [number, number],
+            }
+          : undefined;
+
         return (
-          <g key={`pt-${idx}`}>
-            {pt.showMarker && (
-              <circle
-                cx={x}
-                cy={y}
-                r={pt.markerSize || 3}
-                fill={pt.markerColor || "#000"}
-              />
-            )}
-            {pt.label && (
-              <Label pos={[x, y]} {...pt.label} offset={pt.label.offset || 8} />
-            )}
-          </g>
+          <Point
+            key={`pt-${idx}`}
+            pos={[pxX, pxY]}
+            type={pt.type}
+            markerSize={pt.markerSize}
+            showMarker={pt.showMarker}
+            markerColor={pt.markerColor}
+            strokeWidth={pt.strokeWidth}
+            label={scaledLabel}
+          />
         );
       })}
     </svg>

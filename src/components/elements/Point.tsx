@@ -3,24 +3,29 @@
 import { LAYOUT } from "../../constants";
 import { type PointProps } from "./types";
 import { Label } from "./Label";
+import { normalizeLabel } from "../../utils/type";
 
 export const Point: React.FC<PointProps> = ({
   pos,
   type = "none",
-  size = 4,
-  color = LAYOUT.DEFAULT_COLOR,
+  markerSize = 4,
+  showMarker = true,
+  markerColor = LAYOUT.DEFAULT_COLOR,
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   label,
 }) => {
   const [x, y] = pos;
+  const labelObj = normalizeLabel(label);
 
   return (
     <g>
-      {type === "circle" && <circle cx={x} cy={y} r={size} fill={color} />}
-      {type === "cross" && (
+      {showMarker && type === "circle" && (
+        <circle cx={x} cy={y} r={markerSize} fill={markerColor} />
+      )}
+      {showMarker && type === "cross" && (
         <path
-          d={`M ${x - size} ${y - size} L ${x + size} ${y + size} M ${x - size} ${y + size} L ${x + size} ${y - size}`}
-          stroke={color}
+          d={`M ${x - markerSize} ${y - markerSize} L ${x + markerSize} ${y + markerSize} M ${x - markerSize} ${y + markerSize} L ${x + markerSize} ${y - markerSize}`}
+          stroke={markerColor}
           strokeWidth={strokeWidth}
           strokeLinecap="round"
           fill="none"
@@ -28,11 +33,13 @@ export const Point: React.FC<PointProps> = ({
       )}
       {label && (
         <Label
-          pos={label.pos || [x, y]}
-          align={label.align || "top-right"}
-          offset={label.offset !== undefined ? label.offset : size}
-          text={label.text}
-          color={label.color || color}
+          pos={labelObj?.pos || [x, y]}
+          align={labelObj?.align || "top-right"}
+          offset={
+            labelObj?.offset !== undefined ? labelObj?.offset : markerSize
+          }
+          text={labelObj?.text}
+          color={labelObj?.color || markerColor}
         />
       )}
     </g>

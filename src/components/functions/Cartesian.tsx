@@ -7,27 +7,22 @@ import {
   Axis,
   Label,
   Point,
-  DiagonalHatch,
   type TickValue,
   type PointProps,
   type LabelConfig,
+  type RegionProps,
+  Region,
 } from "../elements";
 import { FunctionGraph, type FunctionGraphProps } from "./FunctionGraph";
 import { type CartesianAxisConfig } from "../types";
 import { LAYOUT } from "../../constants";
+import { normalizePadding } from "../../utils/type";
 
 type FunctionGraphData = Omit<FunctionGraphProps, "pt">;
 
 interface PointData extends Omit<PointProps, "pos"> {
   mathX: number;
   mathY: number;
-}
-
-interface RegionData {
-  points: [number, number][]; // [mathX, mathY] 的陣列
-  fill?: string;
-  stroke?: string;
-  strokeWidth?: number;
 }
 
 interface CartesianProps {
@@ -40,7 +35,7 @@ interface CartesianProps {
   yAxis: CartesianAxisConfig;
   graphs?: FunctionGraphData[];
   points?: PointData[];
-  regions?: RegionData[];
+  regions?: RegionProps[];
 }
 
 export const Cartesian: React.FC<CartesianProps> = ({
@@ -59,10 +54,7 @@ export const Cartesian: React.FC<CartesianProps> = ({
   const yDomain = yAxis.domain || LAYOUT.DEFAULT_AXIS_DOMAIN;
   const xStep = xAxis.step || LAYOUT.DEFAULT_AXIS_STEP;
   const yStep = yAxis.step || LAYOUT.DEFAULT_AXIS_STEP;
-
-  const basePadding: [number, number, number, number] = Array.isArray(padding)
-    ? padding
-    : [padding, padding, padding, padding];
+  const basePadding = normalizePadding(padding);
 
   const generateTicks = (
     domain: [number, number],
@@ -153,35 +145,34 @@ export const Cartesian: React.FC<CartesianProps> = ({
       height={height}
       xmlns="http://www.w3.org/2000/svg"
     >
-      <defs>
-        <DiagonalHatch
-          id="default-hatch" // 給定一個固定的 ID 供內部或外部調用
-          spacing={6}
-          angle={45}
-          color="#333"
-          background="transparent"
-        />
-      </defs>
       <g>
-        {/* --- 0. 繪製多邊形區域 (放在軸線底下避免遮擋) --- */}
-        {regions.map((region, index) => {
-          const pointsStr = region.points
-            .map(([x, y]) => {
-              const [px, py] = pt(x, y);
-              return `${px},${py}`;
-            })
-            .join(" ");
+        {/* --- 繪製多邊形區域 --- */}
+        {regions
+          .filter((r) => r && r.start && r.paths)
+          .map((region, index) => {
+            // 直接在這裡做防禦性轉換
+            const startPx = pt(region.start[0], region.start[1]);
+            const pathsPx = region.paths
+              .filter((p) => p && p.to)
+              .map((p) => ({
+                ...p,
+                to: pt(p.to[0], p.to[1]),
+                radius: p.radius
+                  ? Math.abs(scaleX(p.radius) - scaleX(0))
+                  : undefined,
+              }));
 
-          return (
-            <polygon
-              key={`region-${index}`}
-              points={pointsStr}
-              fill={region.fill || "transparent"}
-              stroke={region.stroke || "none"}
-              strokeWidth={region.strokeWidth || 0}
-            />
-          );
-        })}
+            return (
+              <Region
+                key={`region-${index}`}
+                start={startPx}
+                paths={pathsPx as any}
+                fill={region.fill} // 直接傳入原始 fill 給 Region 解析
+                stroke={region.stroke || "none"}
+                strokeWidth={region.strokeWidth || 0}
+              />
+            );
+          })}
 
         {/* --- 1. 繪製 X 軸 --- */}
         <Axis

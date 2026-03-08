@@ -3,6 +3,7 @@
 import { type SegmentProps } from "./types";
 import { LAYOUT } from "../../constants";
 import { Label } from "./Label";
+import { normalizeLabel, normalizeDash } from "../../utils/type";
 
 export const Segment: React.FC<SegmentProps> = ({
   start,
@@ -14,15 +15,8 @@ export const Segment: React.FC<SegmentProps> = ({
 }) => {
   const [x1, y1] = start;
   const [x2, y2] = end;
-
-  let dashArray: string | undefined = undefined;
-  if (dash === true || dash === "dashed") dashArray = "6, 4";
-  else if (dash === "dash-dot") dashArray = "15,6,4,6";
-  else if (dash === "dotted") dashArray = "2, 3";
-  else if (dash && dash !== "solid" && dash !== "none")
-    dashArray = dash as string;
-
-  const labelObj = typeof label === "string" ? { text: label } : label;
+  const labelObj = normalizeLabel(label);
+  const dashArray = normalizeDash(dash);
 
   return (
     <g>

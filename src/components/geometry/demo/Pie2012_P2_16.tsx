@@ -1,13 +1,13 @@
 // src/components/geometry/demo/Pie2012_P2_16.tsx
 
 import React from "react";
+import { GeometryFrame } from "../GeometryFrame";
 import {
-  GeometryFrame,
-  type GeoPoint,
-  type GeoSegment,
-  type GeoArc,
-  type GeoAngleMarker,
-} from "../GeometryFrame";
+  type PointProps,
+  type SegmentProps,
+  type ArcProps,
+  type AngleMarkerProps,
+} from "../../elements/types";
 
 export const Pie2012_P2_16: React.FC = () => {
   // 數學參數設定
@@ -29,7 +29,7 @@ export const Pie2012_P2_16: React.FC = () => {
   const posD = getPos(r2, endAngle);
 
   // 1. 點與標籤
-  const points: GeoPoint[] = [
+  const points: PointProps[] = [
     { pos: posO, label: { text: "O", align: "top", offset: 10 } },
     { pos: posA, label: { text: "A", align: "top-left", offset: 5 } },
     { pos: posB, label: { text: "B", align: "top-right", offset: 5 } },
@@ -38,19 +38,19 @@ export const Pie2012_P2_16: React.FC = () => {
   ];
 
   // 2. 兩側線段
-  const segments: GeoSegment[] = [
+  const segments: SegmentProps[] = [
     { start: posO, end: posC, strokeWidth: 1.5 },
     { start: posO, end: posD, strokeWidth: 1.5 },
   ];
 
   // 3. 圓弧
-  const arcs: GeoArc[] = [
+  const arcs: ArcProps[] = [
     { center: posO, radius: r1, startAngle, endAngle, strokeWidth: 1.5 },
     { center: posO, radius: r2, startAngle, endAngle, strokeWidth: 1.5 },
   ];
 
   // 4. 角度標記 (在 O 點加上 AngleMarker 作為展示)
-  const angleMarkers: GeoAngleMarker[] = [
+  const angleMarkers: AngleMarkerProps[] = [
     {
       vertex: posO,
       p1: posA, // 起始邊

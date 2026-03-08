@@ -1,11 +1,6 @@
 // src/components/types.tsx
 
-import {
-  type GridConfig,
-  type LabelConfig,
-  type TitleConfig,
-  type TickValue,
-} from "./elements";
+import { type GridConfig, type LabelConfig, type TickValue } from "./elements";
 
 export type TickMapType =
   | Record<string | number, string | number>
@@ -23,7 +18,7 @@ export interface AxisConfig {
   grid?: boolean | GridConfig;
   extendEnd?: number;
   extendStart?: number;
-  title?: string | TitleConfig;
+  title?: string | LabelConfig;
   showLabel?: boolean;
   label?: string | LabelConfig;
   tickLength?: number;

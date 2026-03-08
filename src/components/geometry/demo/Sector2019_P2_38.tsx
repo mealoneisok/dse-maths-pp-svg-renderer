@@ -1,14 +1,13 @@
 // src/components/geometry/demo/Sector2019_P2_38.tsx
 
 import React from "react";
+import { GeometryFrame } from "../GeometryFrame";
 import {
-  GeometryFrame,
-  type GeoPoint,
-  type GeoSegment,
-  type GeoArc,
-  type GeoRegion,
-} from "../GeometryFrame";
-import { DiagonalHatch } from "../../elements/DiagonalHatch";
+  type PointProps,
+  type SegmentProps,
+  type ArcProps,
+  type RegionProps,
+} from "../../elements/types";
 
 export const Sector2019_P2_38: React.FC = () => {
   // 1. 幾何座標計算
@@ -28,7 +27,7 @@ export const Sector2019_P2_38: React.FC = () => {
   const D: [number, number] = [dx, dy];
 
   // 2. 定義標籤點
-  const points: GeoPoint[] = [
+  const points: PointProps[] = [
     { pos: O, label: { text: "O", align: "bottom-left", offset: 5 } },
     { pos: A, label: { text: "A", align: "bottom-right", offset: 5 } },
     { pos: C, label: { text: "C", align: "top-left", offset: 5 } },
@@ -37,7 +36,7 @@ export const Sector2019_P2_38: React.FC = () => {
   ];
 
   // 3. 定義線段
-  const segments: GeoSegment[] = [
+  const segments: SegmentProps[] = [
     { start: O, end: A }, // OA
     { start: O, end: C }, // OC
     { start: O, end: B }, // OB
@@ -46,13 +45,13 @@ export const Sector2019_P2_38: React.FC = () => {
   ];
 
   // 4. 定義圓弧 (最外圍的 AC 弧)
-  const arcs: GeoArc[] = [
+  const arcs: ArcProps[] = [
     { center: O, radius: 12, startAngle: 0, endAngle: Math.PI / 2 },
   ];
 
   // 5. 定義陰影區域 (區域 BCD)
   // 路徑順序：C -> D (直線), D -> B (直線), B -> C (圓弧)
-  const regions: GeoRegion[] = [
+  const regions: RegionProps[] = [
     {
       start: C,
       paths: [
@@ -66,7 +65,7 @@ export const Sector2019_P2_38: React.FC = () => {
           sweepFlag: 0,
         },
       ],
-      fill: "url(#hatch-pattern)", // 使用下方 svgDefs 定義的 ID
+      fill: "default-hatch",
       stroke: "#000",
       strokeWidth: 1.5,
     },
@@ -77,15 +76,6 @@ export const Sector2019_P2_38: React.FC = () => {
       width={400}
       height={400}
       padding={0}
-      svgDefs={
-        <DiagonalHatch
-          id="hatch-pattern"
-          spacing={5}
-          angle={45}
-          color="#333"
-          background="transparent"
-        />
-      }
       points={points}
       segments={segments}
       arcs={arcs}

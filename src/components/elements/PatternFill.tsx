@@ -1,17 +1,13 @@
-// src/components/elements/DiagonalHatch.tsx
+// src/components/elements/PatternFill.tsx
 
 import { LAYOUT } from "../../constants";
+import { type PatternFillProps } from "./types";
 
-interface DiagonalHatchProps {
+interface _PatternFillProps extends PatternFillProps {
   id: string;
-  spacing?: number;
-  angle?: number;
-  strokeWidth?: number;
-  color?: string;
-  background?: string;
 }
 
-export const DiagonalHatch: React.FC<DiagonalHatchProps> = ({
+export const PatternFill: React.FC<_PatternFillProps> = ({
   id,
   spacing = 6,
   angle = 45,

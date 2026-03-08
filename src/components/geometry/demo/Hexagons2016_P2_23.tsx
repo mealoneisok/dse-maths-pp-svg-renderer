@@ -1,7 +1,8 @@
 // src/components/geometry/demo/Hexagons2016_P2_23.tsx
 
 import React, { useMemo } from "react";
-import { GeometryFrame, type GeoPolygon } from "../GeometryFrame";
+import { GeometryFrame } from "../GeometryFrame";
+import { type PolygonProps } from "../../elements/types";
 
 export const Hexagons2016_P2_23: React.FC = () => {
   // 六邊形的半徑 (中心點到頂點的距離)
@@ -23,7 +24,7 @@ export const Hexagons2016_P2_23: React.FC = () => {
     ];
   };
 
-  const polygons: GeoPolygon[] = useMemo(() => {
+  const polygons: PolygonProps[] = useMemo(() => {
     // 完美的 8 個六邊形軸向座標 (q, r)
     const hexCoordinates = [
       // 左側區塊 (3個，垂直排列)
