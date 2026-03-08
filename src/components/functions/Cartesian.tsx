@@ -13,14 +13,12 @@ import {
   type RegionProps,
   Region,
 } from "../elements";
-import { FunctionGraph, type FunctionGraphProps } from "./FunctionGraph";
+import { FunctionGraph, type FunctionGraphConfig } from "./FunctionGraph";
 import { type CartesianAxisConfig } from "../types";
-import { LAYOUT } from "../../constants";
+import { LAYOUT, EPSILON } from "../../constants";
 import { normalizePadding } from "../../utils/type";
 
-type FunctionGraphData = Omit<FunctionGraphProps, "pt">;
-
-interface PointData extends Omit<PointProps, "pos"> {
+interface CartesianPoint extends Omit<PointProps, "pos"> {
   mathX: number;
   mathY: number;
 }
@@ -33,8 +31,8 @@ interface CartesianProps {
   originLabel?: LabelConfig | string | null;
   xAxis: CartesianAxisConfig;
   yAxis: CartesianAxisConfig;
-  graphs?: FunctionGraphData[];
-  points?: PointData[];
+  graphs?: FunctionGraphConfig[];
+  points?: CartesianPoint[];
   regions?: RegionProps[];
 }
 
@@ -66,7 +64,7 @@ export const Cartesian: React.FC<CartesianProps> = ({
       ticks.push({
         val: parseFloat(v.toPrecision(12)),
         t: (v - domain[0]) / (domain[1] - domain[0]),
-        isZero: Math.abs(v) < 1e-10,
+        isZero: Math.abs(v) < EPSILON,
       });
     }
     return ticks;
@@ -115,10 +113,10 @@ export const Cartesian: React.FC<CartesianProps> = ({
   }, [scaleX, scaleY]);
 
   // 4. 計算網格長度 (精確對齊對方軸線的起點與終點)
-  const xExtStart = xAxis.extendStart ?? LAYOUT.DEFAULT_AXIS_EXTEND_START ?? 0;
-  const xExtEnd = xAxis.extendEnd ?? LAYOUT.DEFAULT_AXIS_EXTEND_END ?? 20;
-  const yExtStart = yAxis.extendStart ?? LAYOUT.DEFAULT_AXIS_EXTEND_START ?? 0;
-  const yExtEnd = yAxis.extendEnd ?? LAYOUT.DEFAULT_AXIS_EXTEND_END ?? 20;
+  const xExtStart = xAxis.extendStart ?? LAYOUT.DEFAULT_AXIS_EXTEND_START;
+  const xExtEnd = xAxis.extendEnd ?? LAYOUT.DEFAULT_AXIS_EXTEND_END;
+  const yExtStart = yAxis.extendStart ?? LAYOUT.DEFAULT_AXIS_EXTEND_START;
+  const yExtEnd = yAxis.extendEnd ?? LAYOUT.DEFAULT_AXIS_EXTEND_END;
 
   // --- 計算 X 軸網格線的距離 ---
   const xAxisY = scaleY(0);

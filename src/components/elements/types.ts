@@ -71,12 +71,17 @@ export interface AngleMarkerProps {
   label?: LabelConfig | string | null;
 }
 
-export interface PatternFillProps {
-  spacing?: number;
-  angle?: number;
+export interface PatternFillConfig {
+  type?: "diagonal" | "wave";
+  spacing?: number; // 對角線間距 / 波浪之間的垂直距離
+  angle?: number; // 僅對角線使用
   strokeWidth?: number;
   color?: string;
   background?: string;
+  // --- 以下為 wave 專屬參數 ---
+  waveAmplitude?: number; // 波浪的振幅 (預設 3)
+  waveLength?: number; // 單個波浪的長度 (預設 20)
+  dash?: string | boolean; // 想要圖片中斷開的效果，可以傳入 "4 6" 這種格式
 }
 
 export interface RegionPathProps {
@@ -90,7 +95,7 @@ export interface RegionPathProps {
 export interface RegionProps {
   start: [number, number];
   paths: RegionPathProps[];
-  fill?: string | PatternFillProps;
+  fill?: string | PatternFillConfig;
   stroke?: string;
   strokeWidth?: number;
 }

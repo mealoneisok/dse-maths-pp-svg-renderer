@@ -2,10 +2,9 @@
 
 import React, { useMemo } from "react";
 import { LAYOUT } from "../../constants";
-import { Label, type LabelConfig } from "../elements"; // 若你原本命名為 MathLabel，請自行替換
+import { Label, type LabelConfig } from "../elements";
 
-export interface FunctionGraphProps {
-  pt: (x: number, y: number) => [number, number]; // 改由外部直接傳入座標轉換函式
+export interface FunctionGraphConfig {
   fn: (x: number) => number;
   domain: [number, number];
   color?: string;
@@ -14,13 +13,17 @@ export interface FunctionGraphProps {
   label?: LabelConfig & { x?: number };
 }
 
+interface FunctionGraphProps extends FunctionGraphConfig {
+  pt: (x: number, y: number) => [number, number];
+}
+
 export const FunctionGraph: React.FC<FunctionGraphProps> = ({
   pt,
   fn,
   domain,
   color = LAYOUT.DEFAULT_COLOR,
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
-  samples = 100,
+  samples = LAYOUT.DEFAULT_FUNCTION_GRAPH_SAMPLES,
   label,
 }) => {
   const [minX, maxX] = domain;

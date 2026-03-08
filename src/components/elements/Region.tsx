@@ -12,7 +12,7 @@ export const Region: React.FC<RegionProps> = ({
   stroke = "none",
   strokeWidth = 0,
 }) => {
-  const { fillValue, hatchDef } = normalizeFill(fill);
+  const { fillValue, patternDef } = normalizeFill(fill);
 
   // 2. 計算路徑 d
   let d = `M ${start[0]} ${start[1]}`;
@@ -27,13 +27,11 @@ export const Region: React.FC<RegionProps> = ({
 
   return (
     <>
-      {/* ✨ 3. 如果這個 Region 有專屬的網底，直接在旁邊塞入 defs */}
-      {hatchDef && (
+      {patternDef && (
         <defs>
-          <PatternFill {...hatchDef} />
+          <PatternFill {...patternDef} />
         </defs>
       )}
-      {/* ✨ 4. 套用解析後的 fillValue */}
       <path d={d} fill={fillValue} stroke={stroke} strokeWidth={strokeWidth} />
     </>
   );

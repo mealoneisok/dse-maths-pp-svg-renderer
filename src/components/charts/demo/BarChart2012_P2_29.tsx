@@ -26,9 +26,7 @@ export const BarChart2012_P2_29: React.FC = () => {
       borders={{ right: true }}
       barWidth={40}
       barFill={{
-        spacing: 6,
-        angle: 45,
-        background: "transparent",
+        type: "diagonal",
       }}
       data={chartData}
     />

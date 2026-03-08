@@ -2,7 +2,7 @@
 
 import React from "react";
 import { type LabelConfig, type GridConfig, type TickValue } from "./types";
-import { LAYOUT } from "../../constants";
+import { LAYOUT, EPSILON } from "../../constants";
 import { formatTick } from "../../utils/ticks";
 import { Arrow } from "./Arrow";
 import { Segment } from "./Segment";
@@ -150,8 +150,7 @@ export const Axis: React.FC<AxisProps> = ({
         let isOnLabelStep = true;
         if (labelStep !== undefined && typeof val === "number") {
           const quotient = val / labelStep;
-          // 利用四捨五入檢查是否為整數倍 (容忍 1e-6 的浮點數運算誤差)
-          isOnLabelStep = Math.abs(Math.round(quotient) - quotient) < 1e-6;
+          isOnLabelStep = Math.abs(Math.round(quotient) - quotient) < EPSILON;
         }
 
         const shouldShowNum =

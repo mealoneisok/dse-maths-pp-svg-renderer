@@ -5,16 +5,16 @@ import { type AxisConfig } from "../types";
 import {
   PatternFill,
   Label,
-  type PatternFillProps,
+  type PatternFillConfig,
   type LabelConfig,
 } from "../elements";
 import { ChartFrame } from "./ChartFrame";
-import { normalizeFill } from "../../utils/type";
+import { normalizeLabel, normalizeFill } from "../../utils/type";
 
 export interface BarChartData {
   val: number;
   label?: string | LabelConfig;
-  fill?: string | PatternFillProps;
+  fill?: string | PatternFillConfig;
   stroke?: string;
 }
 
@@ -27,7 +27,7 @@ interface BarChartProps {
   xAxis?: AxisConfig;
   yAxis?: AxisConfig;
   barWidth?: number;
-  barFill?: string | PatternFillProps;
+  barFill?: string | PatternFillConfig;
   borders?: {
     right?: boolean;
     top?: boolean;
@@ -40,7 +40,7 @@ interface BarProps {
   pos: [number, number]; // [bx, by] 長條圖左上角坐標
   width: number;
   height: number;
-  fill?: string | PatternFillProps;
+  fill?: string | PatternFillConfig;
   stroke?: string;
   strokeWidth?: number;
   label?: string | LabelConfig;
@@ -56,16 +56,14 @@ const Bar: React.FC<BarProps> = ({
   label,
 }) => {
   const [bx, by] = pos;
-  const labelObj: LabelConfig | null =
-    typeof label === "string" ? { text: label } : label || null;
-
-  const { fillValue, hatchDef } = normalizeFill(fill);
+  const labelObj = normalizeLabel(label);
+  const { fillValue, patternDef } = normalizeFill(fill);
 
   return (
     <g>
-      {hatchDef && (
+      {patternDef && (
         <defs>
-          <PatternFill {...hatchDef} />
+          <PatternFill {...patternDef} />
         </defs>
       )}
       <rect
