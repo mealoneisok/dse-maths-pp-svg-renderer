@@ -6,6 +6,13 @@ import {
 } from "../components/elements";
 import { LAYOUT } from "../constants";
 
+export const normalizeFontSize = (fontSize?: string | number): number => {
+  if (typeof fontSize === "number") return fontSize;
+  else if (typeof fontSize === "string")
+    return parseInt(fontSize, 10) || LAYOUT.DEFAULT_FONT_SIZE;
+  else return LAYOUT.DEFAULT_FONT_SIZE;
+};
+
 export const normalizeLabel = (
   label?: LabelConfig | string | number | null,
   defaultConfig?: LabelConfig,
@@ -118,5 +125,39 @@ export const normalizeFill = (fill?: string | PatternFillConfig) => {
   return {
     fillValue: `url(#${id})`,
     patternDef: { ...fill, id },
+  };
+};
+
+export const normalizeGrid = <GridConfig>(
+  grid?: boolean | GridConfig | null,
+  defaultConfig?: GridConfig,
+): GridConfig | undefined => {
+  // 1. 處理無網格或未定義：直接回傳 undefined (false, null, undefined 都不顯示)
+  if (!grid) {
+    return undefined;
+  }
+
+  // 2. 處理為 true 的情況：直接套用預設的完整設定 (包含計算好的長度)
+  if (grid === true) {
+    return defaultConfig;
+  }
+
+  // 3. 處理已是物件的情況：與預設參數合併 (保留動態計算的 length，並覆寫使用者自訂屬性)
+  return {
+    ...defaultConfig,
+    ...grid,
+  };
+};
+
+export const normalizeAxis = <AxisConfig>(
+  axis?: AxisConfig,
+  defaultConfig?: AxisConfig,
+): AxisConfig | undefined => {
+  if (!axis) {
+    return undefined;
+  }
+  return {
+    ...defaultConfig,
+    ...axis,
   };
 };

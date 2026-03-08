@@ -48,7 +48,7 @@ export const Axis: React.FC<AxisProps> = ({
   tickMap,
   tickTextPos = null,
   showTickLines = true,
-  tickLength = LAYOUT.AXIS_TICK_LENGTH,
+  tickLength = LAYOUT.DEFAULT_AXIS_TICK_LENGTH,
   tickLineAlign = 0,
   labelDirection = 1,
   showNumbers = true,
@@ -160,10 +160,10 @@ export const Axis: React.FC<AxisProps> = ({
           isOnLabelStep;
 
         let tickOutwardSpace = 0;
-        // if (showTickLines) {
-        //   tickOutwardSpace = tickLineAlign === 0 ? tickLength / 2 : tickLength;
-        // }
-        const tOffset = tickOutwardSpace + LAYOUT.AXIS_NUMBER_OFFSET;
+        if (showTickLines) {
+          tickOutwardSpace = tickLineAlign === 0 ? tickLength / 2 : tickLength;
+        }
+        const tOffset = tickOutwardSpace + LAYOUT.DEFAULT_AXIS_NUMBER_OFFSET;
 
         let gridElement = null;
         if (grid && !(grid.skipZero !== false && isZero)) {

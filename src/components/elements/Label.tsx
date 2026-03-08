@@ -23,7 +23,7 @@ export const Label: React.FC<LabelProps> = ({
   color = LAYOUT.DEFAULT_COLOR,
   rotation = 0,
   fontSize = LAYOUT.DEFAULT_AXIS_LABEL_FONT_SIZE,
-  debug = false,
+  debug = true,
 }) => {
   if (!text && text !== 0) return null;
   const strText = String(text);

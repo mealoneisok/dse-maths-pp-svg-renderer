@@ -41,8 +41,9 @@ export const Square2015_P1_13: React.FC = () => {
 
   return (
     <GeometryFrame
+      padding={0}
       width={300}
-      height={300}
+      //height={300}
       points={points}
       polygons={polygons}
       segments={segments}

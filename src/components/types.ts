@@ -18,9 +18,9 @@ export interface AxisConfig {
   grid?: boolean | GridConfig;
   extendEnd?: number;
   extendStart?: number;
-  title?: string | LabelConfig;
+  title?: string | LabelConfig | undefined;
   showLabel?: boolean;
-  label?: string | LabelConfig;
+  label?: string | LabelConfig | undefined;
   tickLength?: number;
   tickLineAlign?: number;
   tickTextPos?: string;

@@ -29,7 +29,7 @@ export interface BoxPlotProps {
 export const BoxPlot: React.FC<BoxPlotProps> = ({
   width,
   height,
-  padding = 10,
+  padding = 0,
   data,
   xAxis,
   boxHeight = 40,

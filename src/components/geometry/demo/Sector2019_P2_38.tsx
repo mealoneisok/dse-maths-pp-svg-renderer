@@ -74,7 +74,7 @@ export const Sector2019_P2_38: React.FC = () => {
   return (
     <GeometryFrame
       width={400}
-      height={400}
+      //height={400}
       padding={0}
       points={points}
       segments={segments}

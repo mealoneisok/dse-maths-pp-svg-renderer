@@ -13,6 +13,7 @@ export const BoxPlot2014_P1_11: React.FC = () => {
       xAxis={{
         domain: [10, 100], // 畫布範圍
         ticks: [18, 42, 55, 63, 91], // 只在這些特定點顯示刻度數字
+
         label: {
           text: "\\text{Price (thousand dollars)}",
           align: "right",
