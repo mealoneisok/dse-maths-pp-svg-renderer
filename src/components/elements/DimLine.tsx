@@ -7,11 +7,11 @@ import { Arrow } from "./Arrow";
 import { Label } from "./Label";
 import { Segment } from "./Segment";
 import { normalizeLabel } from "../../utils/type";
-import { type SegmentProps } from "./types";
+import { type SegmentProps, type Vector2 } from "./types";
 
 export interface DimLineProps extends Omit<SegmentProps, "start" | "end"> {
-  start: [number, number];
-  end: [number, number];
+  start: Vector2;
+  end: Vector2;
   gapPadding?: number; // 文字兩側的留白斷點距離
   arrowSize?: number;
   arrowAngle?: number;
@@ -22,7 +22,7 @@ export interface DimLineProps extends Omit<SegmentProps, "start" | "end"> {
 }
 
 export const DimLine: React.FC<
-  DimLineProps & { project?: (pt: [number, number]) => [number, number] }
+  DimLineProps & { project?: (pt: Vector2) => Vector2 }
 > = ({
   start,
   end,
@@ -113,14 +113,21 @@ export const DimLine: React.FC<
     gapPadding;
 
   const halfGap = Math.min(gap / 2, Math.max(0, length / 2 - arrowSize));
-  const midX = labelObj?.pos?.[0] ?? (x1 + x2) / 2;
-  const midY = labelObj?.pos?.[1] ?? (y1 + y2) / 2;
 
-  const p1: [number, number] = [
+  const pxLabelPos = labelObj?.pos
+    ? project
+      ? project(labelObj.pos)
+      : labelObj.pos
+    : ([(x1 + x2) / 2, (y1 + y2) / 2] as Vector2);
+
+  const midX = pxLabelPos[0];
+  const midY = pxLabelPos[1];
+
+  const p1: Vector2 = [
     midX - halfGap * Math.cos(angle),
     midY - halfGap * Math.sin(angle),
   ];
-  const p2: [number, number] = [
+  const p2: Vector2 = [
     midX + halfGap * Math.cos(angle),
     midY + halfGap * Math.sin(angle),
   ];

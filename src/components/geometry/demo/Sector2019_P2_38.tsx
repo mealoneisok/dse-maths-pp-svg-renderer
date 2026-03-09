@@ -7,24 +7,22 @@ import {
   type SegmentProps,
   type ArcProps,
   type RegionProps,
+  type Vector2,
 } from "../../elements/types";
 
 export const Sector2019_P2_38: React.FC = () => {
   // 1. 幾何座標計算
-  const O: [number, number] = [0, 0];
-  const A: [number, number] = [12, 0];
-  const C: [number, number] = [0, 12];
+  const O: Vector2 = [0, 0];
+  const A: Vector2 = [12, 0];
+  const C: Vector2 = [0, 12];
 
   // B 點 (60度)
-  const B: [number, number] = [
-    12 * Math.cos(Math.PI / 3),
-    12 * Math.sin(Math.PI / 3),
-  ];
+  const B: Vector2 = [12 * Math.cos(Math.PI / 3), 12 * Math.sin(Math.PI / 3)];
 
   // D 點 (AC 與 OB 交點)
   const dx = 12 / (1 + Math.sqrt(3));
   const dy = 12 - dx;
-  const D: [number, number] = [dx, dy];
+  const D: Vector2 = [dx, dy];
 
   // 2. 定義標籤點
   const points: PointProps[] = [

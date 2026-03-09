@@ -1,12 +1,12 @@
 // src/components/elements/AngleMarker.tsx
-import { type AngleMarkerProps } from "./types";
+import { type AngleMarkerProps, type Vector2 } from "./types";
 import { LAYOUT } from "../../constants";
 import { Label } from "./Label";
 import { measureLatex } from "../../utils/measure";
 import { normalizeLabel, normalizeDash } from "../../utils/type";
 
 export const AngleMarker: React.FC<
-  AngleMarkerProps & { project?: (pt: [number, number]) => [number, number] }
+  AngleMarkerProps & { project?: (pt: Vector2) => Vector2 }
 > = ({
   vertex,
   p1,
@@ -60,6 +60,12 @@ export const AngleMarker: React.FC<
     labelY = pxVertex[1] + distance * Math.sin(midAngle);
   }
 
+  const pxLabelPos = labelObj?.pos
+    ? project
+      ? project(labelObj.pos)
+      : labelObj.pos
+    : ([labelX, labelY] as Vector2);
+
   return (
     <g>
       {isRightAngle ? (
@@ -82,7 +88,7 @@ export const AngleMarker: React.FC<
       )}
       {labelObj && (
         <Label
-          pos={labelObj.pos || [labelX, labelY]}
+          pos={pxLabelPos}
           align={labelObj.align || "center"}
           offset={0}
           text={labelObj.text}

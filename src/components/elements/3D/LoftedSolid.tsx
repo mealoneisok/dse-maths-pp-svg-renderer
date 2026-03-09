@@ -1,19 +1,8 @@
 // src/components/elements/3D/LoftedSolid.tsx
 
 import React from "react";
-import { Segment } from "..";
-import { type Vector3 } from "../../geometry/GeometryFrame3D";
+import { Segment, type LoftedSolidProps, type Vector3 } from "..";
 import { sub, dot, cross } from "@/utils/math";
-
-export interface LoftedSolidProps {
-  baseVertices: [number, number][]; // CCW order expected
-  height: number;
-  topScale?: number;
-  shift?: [number, number];
-  color?: string;
-  project?: (pt: Vector3) => [number, number];
-  viewVector?: Vector3;
-}
 
 export const LoftedSolid: React.FC<LoftedSolidProps> = ({
   baseVertices,

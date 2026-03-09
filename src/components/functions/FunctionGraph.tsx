@@ -2,11 +2,11 @@
 
 import React, { useMemo } from "react";
 import { LAYOUT } from "../../constants";
-import { Label, type LabelConfig } from "../elements";
+import { Label, type LabelConfig, type Vector2 } from "../elements";
 
 export interface FunctionGraphConfig {
   fn: (x: number) => number;
-  domain: [number, number];
+  domain: Vector2;
   color?: string;
   strokeWidth?: number;
   samples?: number;
@@ -14,7 +14,7 @@ export interface FunctionGraphConfig {
 }
 
 interface FunctionGraphProps extends FunctionGraphConfig {
-  pt: (x: number, y: number) => [number, number];
+  pt: (x: number, y: number) => Vector2;
 }
 
 export const FunctionGraph: React.FC<FunctionGraphProps> = ({
@@ -47,7 +47,7 @@ export const FunctionGraph: React.FC<FunctionGraphProps> = ({
       }
     }
 
-    let screenPt: [number, number] | null = null;
+    let screenPt: Vector2 | null = null;
     let txt = null;
 
     if (label && d) {

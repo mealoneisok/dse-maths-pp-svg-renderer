@@ -1,10 +1,11 @@
 // src/components/geometry/demo/Test3D.tsx
 
+import type { Vector2 } from "@/components/elements/types";
 import { GeometryFrame3D } from "../GeometryFrame3D";
 
 export const Test3D = () => {
   // 定義一個正方形底面 (邊長為 4)
-  const squareBase: [number, number][] = [
+  const squareBase: Vector2[] = [
     [-2, -2],
     [2, -2],
     [2, 2],

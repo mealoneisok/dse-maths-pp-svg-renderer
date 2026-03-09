@@ -3,9 +3,10 @@
 import { LAYOUT } from "../../constants";
 import { measureLatex } from "../../utils/measure";
 import katex from "katex";
+import type { Vector2 } from "./types";
 
 interface LabelProps {
-  pos: [number, number];
+  pos: Vector2;
   align?: string;
   offset?: number;
   text?: string | number | null;

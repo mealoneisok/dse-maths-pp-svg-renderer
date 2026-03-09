@@ -1,15 +1,7 @@
 // src/components/elements/3D/Sphere.tsx
 
 import React from "react";
-import { type Vector3 } from "../../geometry/GeometryFrame3D";
-
-export interface SphereProps {
-  center: Vector3;
-  radius: number; // 3D 空間中的半徑
-  color?: string;
-  project?: (pt: Vector3) => [number, number];
-  scale?: number;
-}
+import type { SphereProps } from "../types";
 
 export const Sphere: React.FC<SphereProps> = ({
   center,

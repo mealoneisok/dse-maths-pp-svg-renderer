@@ -1,7 +1,7 @@
 // src/utils/ticks.ts
 
 import { type AxisConfig, type TickMapType } from "../components/types";
-import { type TickValue } from "../components/elements";
+import { type TickValue, type Vector2 } from "../components/elements";
 import { EPSILON } from "../constants";
 
 export function createLinearScale(
@@ -88,10 +88,7 @@ export function parseTicks(axis: AxisConfig): ParsedTicksResult {
   return { tickValues, tickMap };
 }
 
-export const generateTicks = (
-  domain: [number, number],
-  step: number,
-): TickValue[] => {
+export const generateTicks = (domain: Vector2, step: number): TickValue[] => {
   const ticks: TickValue[] = [];
   const min = Math.ceil(domain[0] / step) * step;
   for (let v = min; v <= domain[1]; v += step) {

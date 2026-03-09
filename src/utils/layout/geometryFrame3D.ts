@@ -4,11 +4,14 @@ import { measureLatex } from "../measure";
 import { normalizePadding } from "../type";
 import type {
   SolidDef,
-  Vector3,
   Point3DProps,
   Segment3DProps,
-} from "../../components/geometry/GeometryFrame3D";
-import type { AngleMarker3DProps } from "../../components/elements";
+} from "../../components/elements";
+import type {
+  AngleMarker3DProps,
+  Vector2,
+  Vector3,
+} from "../../components/elements";
 
 export interface Geometry3DLayoutConfig {
   width: number;
@@ -27,7 +30,7 @@ const PROJ_ANGLE = Math.PI / 6;
 const PROJ_DEPTH_SCALE = 0.6;
 
 // 第一階段：無縮放、無原點偏移的純數學 2D 投影
-export const projectMath = (pt: Vector3): [number, number] => {
+export const projectMath = (pt: Vector3): Vector2 => {
   const [x, y, z] = pt;
   return [
     x + y * PROJ_DEPTH_SCALE * Math.cos(PROJ_ANGLE),
@@ -43,7 +46,7 @@ export const computeBoundingBox3D = (
     minY = Infinity,
     maxY = -Infinity;
 
-  const addMathPoint = (pt2d: [number, number]) => {
+  const addMathPoint = (pt2d: Vector2) => {
     if (pt2d[0] < minX) minX = pt2d[0];
     if (pt2d[0] > maxX) maxX = pt2d[0];
     if (pt2d[1] < minY) minY = pt2d[1];

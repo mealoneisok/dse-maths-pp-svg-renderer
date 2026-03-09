@@ -1,17 +1,7 @@
 // src/components/elements/3D/ConeFrustum.tsx
 
 import React from "react";
-import { type Vector3 } from "../../geometry/GeometryFrame3D";
-
-export interface ConeFrustumProps {
-  centerBase: Vector3;
-  radiusBottom: number;
-  radiusTop: number;
-  height: number;
-  color?: string;
-  project?: (pt: Vector3) => [number, number];
-  scale?: number;
-}
+import type { ConeFrustumProps } from "../types";
 
 export const ConeFrustum: React.FC<ConeFrustumProps> = ({
   centerBase,

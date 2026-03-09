@@ -1,8 +1,11 @@
 // src/components/elements/types.tsx
 
+export type Vector2 = [number, number];
+export type Vector3 = [number, number, number];
+
 export interface LabelConfig {
   text?: string | number;
-  pos?: [number, number];
+  pos?: Vector2;
   align?: string;
   offset?: number;
   rotation?: number;
@@ -11,7 +14,7 @@ export interface LabelConfig {
 }
 
 export interface PointProps {
-  pos: [number, number]; // 實體像素座標 [x, y]
+  pos: Vector2; // 實體像素座標 [x, y]
   type?: "circle" | "cross" | "none";
   showMarker?: boolean;
   markerSize?: number;
@@ -20,17 +23,32 @@ export interface PointProps {
   label?: LabelConfig | string | null;
 }
 
+export interface Point3DProps {
+  pos: Vector3;
+  label?: LabelConfig | string | null;
+  markerColor?: string;
+  showMarker?: boolean;
+  markerSize?: number;
+}
+
 export interface SegmentProps {
-  start: [number, number];
-  end: [number, number];
+  start: Vector2;
+  end: Vector2;
   strokeWidth?: number;
   color?: string;
   dash?: string | boolean;
   label?: LabelConfig | string | null;
 }
 
+export interface Segment3DProps {
+  start: Vector3;
+  end: Vector3;
+  color?: string;
+  dash?: string;
+}
+
 export interface ArcProps {
-  center: [number, number];
+  center: Vector2;
   radius: number;
   startAngle: number;
   endAngle: number;
@@ -42,7 +60,7 @@ export interface ArcProps {
 }
 
 export interface PolygonProps {
-  vertices: [number, number][];
+  vertices: Vector2[];
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
@@ -50,7 +68,7 @@ export interface PolygonProps {
 }
 
 export interface CircleProps {
-  center: [number, number];
+  center: Vector2;
   radius: number;
   fill?: string;
   stroke?: string;
@@ -60,9 +78,9 @@ export interface CircleProps {
 }
 
 export interface AngleMarkerProps {
-  vertex: [number, number];
-  p1: [number, number];
-  p2: [number, number];
+  vertex: Vector2;
+  p1: Vector2;
+  p2: Vector2;
   size?: number;
   color?: string;
   strokeWidth?: number;
@@ -86,14 +104,14 @@ export interface PatternFillConfig {
 
 export interface RegionPathProps {
   type: "line" | "arc";
-  to: [number, number];
+  to: Vector2;
   radius?: number;
   largeArc?: 0 | 1;
   sweepFlag?: 0 | 1;
 }
 
 export interface RegionProps {
-  start: [number, number];
+  start: Vector2;
   paths: RegionPathProps[];
   fill?: string | PatternFillConfig;
   stroke?: string;
@@ -101,7 +119,7 @@ export interface RegionProps {
 }
 
 export interface GridConfig {
-  length?: number | [number, number];
+  length?: number | Vector2;
   direction?: "positive" | "negative" | "both";
   skipZero?: boolean;
   color?: string;
@@ -113,3 +131,72 @@ export interface TickValue {
   t: number;
   isZero: boolean;
 }
+
+export interface LoftedSolidProps {
+  baseVertices: Vector2[]; // CCW order expected
+  height: number;
+  topScale?: number;
+  shift?: Vector2;
+  color?: string;
+  project?: (pt: Vector3) => Vector2;
+  viewVector?: Vector3;
+}
+
+export interface PolyhedronProps {
+  vertices: Vector3[];
+  faces: number[][]; // 頂點 index 陣列，順序必須從面的外部看是「逆時針 (CCW)」
+  color?: string;
+  project?: (pt: Vector3) => Vector2;
+  viewVector?: Vector3;
+}
+
+export interface SphereProps {
+  center: Vector3;
+  radius: number; // 3D 空間中的半徑
+  color?: string;
+  project?: (pt: Vector3) => Vector2;
+  scale?: number;
+}
+
+export interface HemisphereProps {
+  centerBase: Vector3;
+  radius: number; // 3D 空間中的半徑
+  color?: string;
+  project?: (pt: Vector3) => Vector2;
+  scale?: number;
+}
+
+export interface ConeFrustumProps {
+  centerBase: Vector3;
+  radiusBottom: number;
+  radiusTop: number;
+  height: number;
+  color?: string;
+  project?: (pt: Vector3) => Vector2;
+  scale?: number;
+}
+
+type LoftedDef = { type: "lofted" } & Omit<
+  LoftedSolidProps,
+  "project" | "viewVector"
+>;
+type PolyhedronDef = { type: "polyhedron" } & Omit<
+  PolyhedronProps,
+  "project" | "viewVector"
+>;
+type SphereDef = { type: "sphere" } & Omit<SphereProps, "project" | "scale">;
+type ConeFrustumDef = { type: "coneFrustum" } & Omit<
+  ConeFrustumProps,
+  "project" | "scale"
+>;
+type HemisphereDef = { type: "hemisphere" } & Omit<
+  HemisphereProps,
+  "project" | "scale"
+>;
+
+export type SolidDef =
+  | LoftedDef
+  | PolyhedronDef
+  | SphereDef
+  | ConeFrustumDef
+  | HemisphereDef;

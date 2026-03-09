@@ -1,7 +1,12 @@
 // src/components/elements/Axis.tsx
 
 import React from "react";
-import { type LabelConfig, type GridConfig, type TickValue } from "./types";
+import {
+  type LabelConfig,
+  type GridConfig,
+  type TickValue,
+  type Vector2,
+} from "./types";
 import { LAYOUT, EPSILON } from "../../constants";
 import { formatTick } from "../../utils/ticks";
 import { Arrow } from "./Arrow";
@@ -11,8 +16,8 @@ import { RotationArrow } from "./RotationArrow";
 import { normalizeLabel } from "../../utils/type";
 
 export interface AxisProps {
-  start: [number, number];
-  end: [number, number];
+  start: Vector2;
+  end: Vector2;
   extendStart?: number;
   extendEnd?: number;
   tickValues?: TickValue[];
@@ -76,14 +81,8 @@ export const Axis: React.FC<AxisProps> = ({
     nx = -dy / len,
     ny = dx / len;
 
-  const actualStart: [number, number] = [
-    sx - ux * extendStart,
-    sy - uy * extendStart,
-  ];
-  const actualEnd: [number, number] = [
-    ex + ux * extendEnd,
-    ey + uy * extendEnd,
-  ];
+  const actualStart: Vector2 = [sx - ux * extendStart, sy - uy * extendStart];
+  const actualEnd: Vector2 = [ex + ux * extendEnd, ey + uy * extendEnd];
 
   const endLabelObj = normalizeLabel(label, { pos: actualEnd });
   const titleObj = normalizeLabel(title);

@@ -7,6 +7,7 @@ import {
   type SegmentProps,
   type ArcProps,
   type AngleMarkerProps,
+  type Vector2,
 } from "../../elements/types";
 
 export const Pie2012_P2_16: React.FC = () => {
@@ -17,12 +18,12 @@ export const Pie2012_P2_16: React.FC = () => {
   const endAngle = 1.7 * Math.PI; // 約 306 度
 
   // 輔助函式：計算極座標轉直角座標
-  const getPos = (r: number, angle: number): [number, number] => [
+  const getPos = (r: number, angle: number): Vector2 => [
     r * Math.cos(angle),
     r * Math.sin(angle),
   ];
 
-  const posO: [number, number] = [0, 0];
+  const posO: Vector2 = [0, 0];
   const posA = getPos(r1, startAngle);
   const posB = getPos(r1, endAngle);
   const posC = getPos(r2, startAngle);

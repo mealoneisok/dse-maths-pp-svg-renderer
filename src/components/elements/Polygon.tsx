@@ -1,12 +1,12 @@
 // src/components/elements/Polygon.tsx
 import React from "react";
 import { Label } from "./Label";
-import { type PolygonProps } from "./types";
+import { type PolygonProps, type Vector2 } from "./types";
 import { normalizeLabel } from "../../utils/type";
 import { LAYOUT } from "../../constants";
 
 export const Polygon: React.FC<
-  PolygonProps & { project?: (pt: [number, number]) => [number, number] }
+  PolygonProps & { project?: (pt: Vector2) => Vector2 }
 > = ({
   vertices,
   fill = "none",

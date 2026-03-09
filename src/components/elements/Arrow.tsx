@@ -1,6 +1,6 @@
 // src/components/elements/Arrow.tsx
 
-import { type SegmentProps } from "./types";
+import { type SegmentProps, type Vector2 } from "./types";
 import { LAYOUT } from "../../constants";
 import { Segment } from "./Segment";
 
@@ -50,11 +50,11 @@ export const Arrow: React.FC<ArrowProps> = ({
   const c = Math.max(0, Math.min(1, closure));
   const backOffset = arrowSize * Math.cos(arrowAngle) * c;
 
-  const adjStart: [number, number] = [
+  const adjStart: Vector2 = [
     x1 + (showStartArrow ? backOffset * Math.cos(angle) : 0),
     y1 + (showStartArrow ? backOffset * Math.sin(angle) : 0),
   ];
-  const adjEnd: [number, number] = [
+  const adjEnd: Vector2 = [
     x2 - (showEndArrow ? backOffset * Math.cos(angle) : 0),
     y2 - (showEndArrow ? backOffset * Math.sin(angle) : 0),
   ];

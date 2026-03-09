@@ -9,59 +9,17 @@ import {
   Sphere,
   ConeFrustum,
   Hemisphere,
-  type LoftedSolidProps,
-  type PolyhedronProps,
-  type SphereProps,
-  type ConeFrustumProps,
-  type HemisphereProps,
+  type Point3DProps,
+  type Segment3DProps,
+  type SolidDef,
   type AngleMarker3DProps,
+  type Vector2,
+  type Vector3,
 } from "../elements";
 import { AngleMarker3D } from "../elements/3D/AngleMarker3D";
 import { calculateLayout3D } from "../../utils/layout/geometryFrame3D";
 import { normalizeLabel } from "@/utils/type";
 import { LAYOUT } from "@/constants";
-
-type LoftedDef = { type: "lofted" } & Omit<
-  LoftedSolidProps,
-  "project" | "viewVector"
->;
-type PolyhedronDef = { type: "polyhedron" } & Omit<
-  PolyhedronProps,
-  "project" | "viewVector"
->;
-type SphereDef = { type: "sphere" } & Omit<SphereProps, "project" | "scale">;
-type ConeFrustumDef = { type: "coneFrustum" } & Omit<
-  ConeFrustumProps,
-  "project" | "scale"
->;
-type HemisphereDef = { type: "hemisphere" } & Omit<
-  HemisphereProps,
-  "project" | "scale"
->;
-
-export type SolidDef =
-  | LoftedDef
-  | PolyhedronDef
-  | SphereDef
-  | ConeFrustumDef
-  | HemisphereDef;
-
-export type Vector3 = [number, number, number];
-
-export interface Point3DProps {
-  pos: Vector3;
-  label?: any;
-  markerColor?: string;
-  showMarker?: boolean;
-  markerSize?: number; // 🌟 補上 markerSize 屬性
-}
-
-export interface Segment3DProps {
-  start: Vector3;
-  end: Vector3;
-  color?: string;
-  dash?: string;
-}
 
 interface GeometryFrame3DProps {
   width: number;
@@ -82,7 +40,6 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
   solids = [],
   angleMarkers = [],
 }) => {
-  // 🌟 預處理階段：補齊所有預設值，讓下游不用再做 Fallback
   const processedPoints = useMemo(() => {
     return points.map((pt) => {
       const markerSize = pt.markerSize ?? 4;
@@ -91,7 +48,7 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
         showMarker: pt.showMarker ?? false,
         markerSize,
         label: normalizeLabel(pt.label, {
-          offset: markerSize, // 直接將點的大小作為預設 offset
+          offset: markerSize,
           align: LAYOUT.DEFAULT_POINT_LABEL_ALIGN,
         }),
       };
@@ -102,7 +59,7 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
     return angleMarkers.map((am) => ({
       ...am,
       label: normalizeLabel(am.label, {
-        offset: 8, // AngleMarker 預設 offset
+        offset: 8,
         align: LAYOUT.DEFAULT_POINT_LABEL_ALIGN,
       }),
     }));
@@ -140,7 +97,7 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
     depthScale * Math.sin(angle),
   ];
 
-  const project = (pt3d: Vector3): [number, number] => {
+  const project = (pt3d: Vector3): Vector2 => {
     const [x, y, z] = pt3d;
     const px = (x + y * depthScale * Math.cos(angle)) * layout.scale;
     const py = (-z - y * depthScale * Math.sin(angle)) * layout.scale;

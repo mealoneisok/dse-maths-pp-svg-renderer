@@ -3,25 +3,25 @@
 import React from "react";
 import { type AxisConfig } from "../types";
 import { LAYOUT } from "../../constants";
-import { Segment, Label } from "../elements";
+import { Segment, Label, type Vector2 } from "../elements";
 import { ChartFrame } from "./ChartFrame";
 
 interface LabelData {
   text: string;
-  pos: [number, number];
+  pos: Vector2;
   align?: string;
   offset?: number;
 }
 
 interface LineData {
-  points: [number, number][];
+  points: Vector2[];
   color?: string;
   label?: LabelData;
-  guidelines?: [[number, number], [number, number]][];
+  guidelines?: [Vector2, Vector2][];
 }
 
 interface AnnotationData {
-  pos: [number, number];
+  pos: Vector2;
   text: string;
   align?: string;
   offset?: number;

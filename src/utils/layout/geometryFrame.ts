@@ -10,6 +10,7 @@ import {
   type AngleMarkerProps,
   type RegionProps,
   type LabelConfig,
+  type Vector2,
 } from "../../components/elements";
 import { normalizePadding } from "../type";
 import { measureLatex } from "../measure";
@@ -269,18 +270,13 @@ export function calculateLayout({
   const cx = (minX + maxX) / 2;
   const cy = (minY + maxY) / 2;
 
-  const finalDomainX: [number, number] = [
-    cx - actualMathW / 2,
-    cx + actualMathW / 2,
-  ];
-  const finalDomainY: [number, number] = [
-    cy - actualMathH / 2,
-    cy + actualMathH / 2,
-  ];
+  const finalDomainX: Vector2 = [cx - actualMathW / 2, cx + actualMathW / 2];
+  const finalDomainY: Vector2 = [cy - actualMathH / 2, cy + actualMathH / 2];
 
   return {
     finalWidth,
     finalHeight,
+    scale: finalScale,
     scaleX: createLinearScale(
       finalDomainX[0],
       finalDomainX[1],

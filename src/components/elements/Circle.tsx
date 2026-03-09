@@ -1,14 +1,14 @@
 // src/components/elements/Circle.tsx
 import React from "react";
 import { Label } from "./Label";
-import { type CircleProps } from "./types";
+import { type CircleProps, type Vector2 } from "./types";
 import { normalizeLabel, normalizeDash } from "../../utils/type";
 import { LAYOUT } from "../../constants";
 
 export const Circle: React.FC<
   CircleProps & {
-    project?: (pt: [number, number]) => [number, number];
-    scaleX?: (v: number) => number;
+    project?: (pt: Vector2) => Vector2;
+    scale?: number;
   }
 > = ({
   center,
@@ -19,16 +19,18 @@ export const Circle: React.FC<
   dash,
   label,
   project,
-  scaleX,
+  scale,
 }) => {
   const labelObj = normalizeLabel(label);
   const dashArray = normalizeDash(dash);
 
-  // 🌟 處理座標與長度的轉換
   const pxCenter = project ? project(center) : center;
-  const pxRadius = scaleX
-    ? Math.abs(scaleX(center[0] + radius) - scaleX(center[0]))
-    : radius;
+  const pxRadius = scale ? radius * scale : radius;
+  const pxLabelPos = labelObj?.pos
+    ? project
+      ? project(labelObj.pos)
+      : labelObj.pos
+    : pxCenter;
 
   return (
     <g>
@@ -41,7 +43,7 @@ export const Circle: React.FC<
         strokeWidth={strokeWidth}
         strokeDasharray={dashArray}
       />
-      {labelObj && <Label pos={labelObj.pos!} {...labelObj} />}
+      {labelObj && <Label pos={pxLabelPos} {...labelObj} />}
     </g>
   );
 };

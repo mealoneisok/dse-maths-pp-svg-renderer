@@ -1,7 +1,7 @@
 // src/components/elements/3D/AngleMarker3D.tsx
 
 import React from "react";
-import { type Vector3 } from "../../geometry/GeometryFrame3D";
+import type { Vector2, Vector3 } from "../types";
 import { Label } from "../Label";
 import { normalizeDash, normalizeLabel } from "@/utils/type";
 import { sub, add, scale, dot, normalize } from "@/utils/math";
@@ -15,7 +15,7 @@ export interface AngleMarker3DProps {
   isRightAngle?: boolean;
   dash?: string;
   label?: any;
-  project?: (pt: Vector3) => [number, number];
+  project?: (pt: Vector3) => Vector2;
 }
 
 export const AngleMarker3D: React.FC<AngleMarker3DProps> = ({
@@ -73,7 +73,7 @@ export const AngleMarker3D: React.FC<AngleMarker3DProps> = ({
       const dist2D = Math.sqrt(dir2DX * dir2DX + dir2DY * dir2DY);
       const labelOffset = labelObj.offset !== undefined ? labelObj.offset : 10;
 
-      const projLabel: [number, number] = [
+      const projLabel: Vector2 = [
         projCorner[0] + (dir2DX / dist2D) * labelOffset,
         projCorner[1] + (dir2DY / dist2D) * labelOffset,
       ];
@@ -133,7 +133,7 @@ export const AngleMarker3D: React.FC<AngleMarker3DProps> = ({
       const labelOffset = labelObj.offset !== undefined ? labelObj.offset : 12;
       const totalDist = r + labelOffset;
 
-      const projLabel: [number, number] = [
+      const projLabel: Vector2 = [
         projV[0] + totalDist * Math.cos(midAngle),
         projV[1] + totalDist * Math.sin(midAngle),
       ];

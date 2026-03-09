@@ -1,5 +1,7 @@
 // src/constants.ts
 
+import type { Vector2 } from "./components/elements";
+
 export const EPSILON = 1e-6;
 
 export const LAYOUT = {
@@ -17,7 +19,7 @@ export const LAYOUT = {
   DEFAULT_AXIS_EXTEND_END: 30,
   DEFAULT_AXIS_STEP: 1,
   DEFAULT_AXIS_LABEL_STEP: 1,
-  DEFAULT_AXIS_DOMAIN: [-5, 5] as [number, number],
+  DEFAULT_AXIS_DOMAIN: [-5, 5] as Vector2,
 
   DEFAULT_PATTERN_FILL_TYPE: "diagonal",
   DEFAULT_HATCH_SPACING: 6,

@@ -7,7 +7,7 @@ import {
   type CartesianAxisConfig,
   type CartesianAxisRenderConfig,
 } from "../../components/types";
-import { type LabelConfig } from "../../components/elements";
+import { type LabelConfig, type Vector2 } from "../../components/elements";
 import { normalizeGrid, normalizeLabel, normalizePadding } from "../type";
 
 // 統一處理預設值與 Ticks 的生成
@@ -179,7 +179,7 @@ export function calculateLayout({
     height - dynamicPadding.bottom,
     dynamicPadding.top,
   );
-  const pt = (x: number, y: number): [number, number] => [scaleX(x), scaleY(y)];
+  const pt = (x: number, y: number): Vector2 => [scaleX(x), scaleY(y)];
 
   const originLabelObj = normalizeLabel(originLabel, {
     align: LAYOUT.DEFAULT_CARTESIAN_ORIGIN_LABEL_ALIGN,
@@ -189,7 +189,7 @@ export function calculateLayout({
 
   // 4. Grid 計算
   const getDefaultGrid = (negLen: number, posLen: number) => ({
-    length: [negLen, posLen] as [number, number],
+    length: [negLen, posLen] as Vector2,
     direction: "both" as const,
     skipZero: true,
     dash: "dotted" as const,

@@ -7,6 +7,7 @@ import {
   Label,
   type PatternFillConfig,
   type LabelConfig,
+  type Vector2,
 } from "../elements";
 import { ChartFrame } from "./ChartFrame";
 import { normalizeLabel, normalizeFill } from "../../utils/type";
@@ -37,7 +38,7 @@ interface BarChartProps {
 }
 
 interface BarProps {
-  pos: [number, number]; // [bx, by] 長條圖左上角坐標
+  pos: Vector2; // [bx, by] 長條圖左上角坐標
   width: number;
   height: number;
   fill?: string | PatternFillConfig;

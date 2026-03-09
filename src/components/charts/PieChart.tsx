@@ -1,13 +1,12 @@
 // src/components/charts/PieChart.tsx
 
 import React, { useMemo } from "react";
-import { AngleMarker } from "../elements/AngleMarker";
-import { Label } from "../elements/Label";
+import { Label, AngleMarker, type Vector2 } from "../elements";
 import { measureLatex } from "../../utils/measure";
 
 export interface PieSliceLabelConfig {
   text: string | number;
-  pos?: [number, number];
+  pos?: Vector2;
   align?: string;
   offset?: number;
   color?: string;

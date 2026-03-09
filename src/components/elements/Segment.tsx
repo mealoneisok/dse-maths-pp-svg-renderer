@@ -1,11 +1,11 @@
 // src/components/elements/Segment.tsx
-import { type SegmentProps } from "./types";
+import { type SegmentProps, type Vector2 } from "./types";
 import { LAYOUT } from "../../constants";
 import { Label } from "./Label";
 import { normalizeLabel, normalizeDash } from "../../utils/type";
 
 export const Segment: React.FC<
-  SegmentProps & { project?: (pt: [number, number]) => [number, number] }
+  SegmentProps & { project?: (pt: Vector2) => Vector2 }
 > = ({
   start,
   end,
@@ -24,6 +24,12 @@ export const Segment: React.FC<
   const labelObj = normalizeLabel(label);
   const dashArray = normalizeDash(dash);
 
+  const pxLabelPos = labelObj?.pos
+    ? project
+      ? project(labelObj.pos)
+      : labelObj.pos
+    : ([(x1 + x2) / 2, (y1 + y2) / 2] as Vector2);
+
   return (
     <g>
       <line
@@ -37,7 +43,7 @@ export const Segment: React.FC<
       />
       {labelObj && (
         <Label
-          pos={labelObj.pos || [(x1 + x2) / 2, (y1 + y2) / 2]}
+          pos={pxLabelPos}
           align={labelObj.align || "center"}
           offset={labelObj.offset || LAYOUT.DEFAULT_OFFSET}
           text={labelObj.text}

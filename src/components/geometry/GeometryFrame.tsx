@@ -9,7 +9,6 @@ import {
   Arc,
   DimLine,
   Region,
-  type LabelConfig,
   type PointProps,
   type SegmentProps,
   type ArcProps,
@@ -18,11 +17,13 @@ import {
   type AngleMarkerProps,
   type RegionProps,
   type DimLineProps,
+  type Vector2,
 } from "../elements";
-import { normalizeLabel } from "../../utils/type";
+import { normalizeLabel } from "@/utils/type";
 import { useMemo } from "react";
-import { calculateLayout } from "../../utils/layout/geometryFrame";
+import { calculateLayout } from "@/utils/layout/geometryFrame";
 import { LAYOUT } from "@/constants";
+import { getMidpoint } from "@/utils/math";
 
 interface GeometryFrameProps {
   width: number;
@@ -52,10 +53,6 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
   dimLines = [],
 }) => {
   // 🌟 1. 預處理 (Data Normalization)：為所有元素補齊中心點 (pos) 與 label
-  const getMidpoint = (
-    p1: [number, number],
-    p2: [number, number],
-  ): [number, number] => [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
 
   const elements = useMemo(() => {
     return {
@@ -80,7 +77,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           (acc, v) => [acc[0] + v[0], acc[1] + v[1]],
           [0, 0],
         );
-        const center: [number, number] = [
+        const center: Vector2 = [
           sum[0] / p.vertices.length,
           sum[1] / p.vertices.length,
         ];
@@ -134,7 +131,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
     regions,
   ]);
 
-  // 🌟 2. 計算 Layout
+  // 2. 計算 Layout
   const layout = useMemo(() => {
     return calculateLayout({
       width,
@@ -147,19 +144,10 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
     });
   }, [width, height, padding, elements]);
 
-  // 🌟 3. Helper: 純粹的投影轉換器 (不帶任何預設值邏輯)
-  const toPxX = (mathX: number) => layout.scaleX(mathX);
-  const toPxY = (mathY: number) => layout.scaleY(mathY);
-  const project = (pt: [number, number]): [number, number] => [
-    toPxX(pt[0]),
-    toPxY(pt[1]),
+  const project = (pt: Vector2): Vector2 => [
+    layout.scaleX(pt[0]),
+    layout.scaleY(pt[1]),
   ];
-
-  // 乾淨的標籤投影
-  const projectLabel = (lbl?: LabelConfig) => {
-    if (!lbl) return undefined;
-    return { ...lbl, pos: lbl.pos ? project(lbl.pos) : undefined };
-  };
 
   return (
     <svg
@@ -177,7 +165,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
             key={`region-${idx}`}
             {...region}
             project={project}
-            scaleX={toPxX}
+            scale={layout.scale}
           />
         ))}
 
@@ -186,7 +174,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           key={`poly-${idx}`}
           {...poly}
           project={project}
-          label={projectLabel(poly.label)}
+          label={poly.label}
         />
       ))}
 
@@ -195,8 +183,8 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           key={`circle-${idx}`}
           {...circle}
           project={project}
-          scaleX={toPxX}
-          label={projectLabel(circle.label)}
+          scale={layout.scale}
+          label={circle.label}
         />
       ))}
 
@@ -205,9 +193,8 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           key={`arc-${idx}`}
           {...arc}
           project={project}
-          scaleX={toPxX}
-          scaleY={toPxY}
-          label={projectLabel(arc.label)}
+          scale={layout.scale}
+          label={arc.label}
         />
       ))}
 
@@ -216,7 +203,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           key={`seg-${idx}`}
           {...seg}
           project={project}
-          label={projectLabel(seg.label)}
+          label={seg.label}
         />
       ))}
 
@@ -225,17 +212,12 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           key={`am-${idx}`}
           {...am}
           project={project}
-          label={projectLabel(am.label)}
+          label={am.label}
         />
       ))}
 
       {elements.points.map((pt, idx) => (
-        <Point
-          key={`pt-${idx}`}
-          {...pt}
-          project={project}
-          label={projectLabel(pt.label)}
-        />
+        <Point key={`pt-${idx}`} {...pt} project={project} label={pt.label} />
       ))}
 
       {elements.dimLines.map((dl, idx) => (
@@ -243,7 +225,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           key={`dim-${idx}`}
           {...dl}
           project={project}
-          label={projectLabel(dl.label)}
+          label={dl.label}
         />
       ))}
     </svg>

@@ -1,17 +1,8 @@
 // src/components/elements/3D/Polyhedron.tsx
 
 import React from "react";
-import { Segment } from "../Segment";
-import { type Vector3 } from "../../geometry/GeometryFrame3D";
+import { Segment, type PolyhedronProps, type Vector3 } from "..";
 import { sub, dot, cross } from "@/utils/math";
-
-export interface PolyhedronProps {
-  vertices: Vector3[];
-  faces: number[][]; // 頂點 index 陣列，順序必須從面的外部看是「逆時針 (CCW)」
-  color?: string;
-  project?: (pt: Vector3) => [number, number];
-  viewVector?: Vector3;
-}
 
 export const Polyhedron: React.FC<PolyhedronProps> = ({
   vertices,

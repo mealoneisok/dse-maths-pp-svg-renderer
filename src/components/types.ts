@@ -1,13 +1,18 @@
 // src/components/types.tsx
 
-import { type GridConfig, type LabelConfig, type TickValue } from "./elements";
+import {
+  type GridConfig,
+  type LabelConfig,
+  type TickValue,
+  type Vector2,
+} from "./elements";
 
 export type TickMapType =
   | Record<string | number, string | number>
   | Map<string | number, string | number>;
 
 export interface AxisConfig {
-  domain?: [number, number];
+  domain?: Vector2;
   step?: number;
   ticks?: (number | string)[];
   tickMap?: TickMapType | null;
@@ -32,8 +37,8 @@ export interface ParsedAxisConfig extends AxisConfig {
 }
 
 export interface AxisRenderConfig extends ParsedAxisConfig {
-  start: [number, number];
-  end: [number, number];
+  start: Vector2;
+  end: Vector2;
   tickTextPos: string;
   grid?: GridConfig;
 }
@@ -43,8 +48,8 @@ export interface CartesianAxisConfig extends AxisConfig {
 }
 
 export interface CartesianAxisRenderConfig extends CartesianAxisConfig {
-  start: [number, number];
-  end: [number, number];
+  start: Vector2;
+  end: Vector2;
   tickValues: TickValue[];
   extendStart: number;
   extendEnd: number;

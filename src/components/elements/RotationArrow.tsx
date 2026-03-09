@@ -1,7 +1,9 @@
 // src/components/elements/RotationArrow.tsx
 
+import type { Vector2 } from "./types";
+
 interface RotationArrowProps {
-  pos: [number, number];
+  pos: Vector2;
   angle: number; // Radian
   size?: number;
   layer?: "all" | "front" | "back";

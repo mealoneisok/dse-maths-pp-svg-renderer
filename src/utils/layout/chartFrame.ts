@@ -8,7 +8,7 @@ import {
   type ParsedAxisConfig,
   type AxisRenderConfig,
 } from "../../components/types";
-import { type LabelConfig } from "../../components/elements";
+import { type LabelConfig, type Vector2 } from "../../components/elements";
 import { normalizeLabel, normalizePadding } from "../type";
 
 // --- 處理 Axis 預設值與解析 ---
@@ -309,8 +309,8 @@ export function calculateLayout({
   const _xAxis = {
     ...rawXAxis,
     title: xMetrics.titleObj,
-    start: [startX, startY] as [number, number],
-    end: [endX, startY] as [number, number],
+    start: [startX, startY] as Vector2,
+    end: [endX, startY] as Vector2,
     extendStart: 0,
     extendEnd: xExtend,
     tickTextPos: "bottom",
@@ -329,8 +329,8 @@ export function calculateLayout({
   const _yAxis = {
     ...rawYAxis,
     title: yMetrics.titleObj,
-    start: [startX, startY] as [number, number],
-    end: [startX, endY] as [number, number],
+    start: [startX, startY] as Vector2,
+    end: [startX, endY] as Vector2,
     extendStart: 0,
     extendEnd: yExtend,
     tickTextPos: "left",

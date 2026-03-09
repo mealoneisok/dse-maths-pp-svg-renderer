@@ -2,7 +2,7 @@
 
 import React, { useMemo } from "react";
 import { GeometryFrame } from "../GeometryFrame";
-import { type PolygonProps } from "../../elements/types";
+import { type PolygonProps, type Vector2 } from "../../elements/types";
 
 export const Hexagons2016_P2_23: React.FC = () => {
   // 六邊形的半徑 (中心點到頂點的距離)
@@ -10,7 +10,7 @@ export const Hexagons2016_P2_23: React.FC = () => {
   const SQRT3 = Math.sqrt(3);
 
   // 根據軸向座標 (q, r) 計算平頂六邊形的 6 個頂點
-  const getHexagonVertices = (q: number, r: number): [number, number][] => {
+  const getHexagonVertices = (q: number, r: number): Vector2[] => {
     const cx = R * 1.5 * q;
     const cy = R * SQRT3 * (r + q / 2);
 
