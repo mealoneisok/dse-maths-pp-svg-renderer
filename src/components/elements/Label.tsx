@@ -30,7 +30,7 @@ export const Label: React.FC<LabelProps> = ({
   if (!text && text !== 0) return null;
   const strText = String(text);
 
-  // 🌟 陣列解構天生支援「只取前兩個」：就算傳入的是 [x, y, z]，這裡也只會抓出 x 和 y！
+  // 陣列解構天生支援「只取前兩個」：就算傳入的是 [x, y, z]，這裡也只會抓出 x 和 y！
   const [x, y] = pos;
 
   const { width: boxWidth, height: boxHeight } = measureLatex(

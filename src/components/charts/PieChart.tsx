@@ -64,7 +64,7 @@ export const PieChart: React.FC<PieChartProps> = ({
     const minRequiredWidth = title ? titleMetrics.width + pl + pr + 8 : width;
     const actualWidth = Math.max(width, minRequiredWidth);
 
-    // --- 🌟 修正：扣除 Padding 後，預留邊框空間 ---
+    // --- 修正：扣除 Padding 後，預留邊框空間 ---
     const availableWidth = actualWidth - pl - pr;
     const availableHeight =
       height !== undefined ? height - effectivePt - pb : availableWidth;

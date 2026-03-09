@@ -5,7 +5,7 @@ import {
   Point,
   Segment,
   Polygon,
-  Circle,
+  Ellipse,
   Arc,
   DimLine,
   Region,
@@ -13,18 +13,20 @@ import {
   type SegmentProps,
   type ArcProps,
   type PolygonProps,
-  type CircleProps,
+  type EllipseProps,
   type AngleMarkerProps,
   type RegionProps,
   type DimLineProps,
   type Vector2,
   type Vector3,
+  type SectorProps,
 } from "../elements";
 import { normalizeLabel } from "@/utils/type";
 import { useMemo } from "react";
 import { calculateLayout } from "@/utils/layout/geometryFrame";
 import { LAYOUT } from "@/constants";
 import { getMidpoint } from "@/utils/math";
+import { Sector } from "../elements/Sector";
 
 interface GeometryFrameProps {
   width: number;
@@ -33,7 +35,8 @@ interface GeometryFrameProps {
   points?: PointProps[];
   segments?: SegmentProps[];
   polygons?: PolygonProps[];
-  circles?: CircleProps[];
+  ellipses?: EllipseProps[];
+  sectors?: SectorProps[];
   arcs?: ArcProps[];
   angleMarkers?: AngleMarkerProps[];
   regions?: RegionProps[];
@@ -47,13 +50,14 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
   points = [],
   segments = [],
   polygons = [],
-  circles = [],
+  ellipses = [],
+  sectors = [],
   arcs = [],
   angleMarkers = [],
   regions = [],
   dimLines = [],
 }) => {
-  // 🌟 1. 預處理 (Data Normalization)：為所有元素補齊中心點 (pos) 與 label
+  // 1. 預處理 (Data Normalization)：為所有元素補齊中心點 (pos) 與 label
   const elements = useMemo(() => {
     return {
       points: points.map((pt) => ({
@@ -90,12 +94,20 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           }),
         };
       }),
-      circles: circles.map((c) => ({
+      ellipses: ellipses.map((c) => ({
         ...c,
         label: normalizeLabel(c.label, {
           offset: 8,
           align: "center",
           pos: c.center,
+        }),
+      })),
+      sectors: sectors.map((s) => ({
+        ...s,
+        label: normalizeLabel(s.label, {
+          offset: 8,
+          align: "center",
+          pos: s.center,
         }),
       })),
       arcs: arcs.map((a) => ({
@@ -124,7 +136,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
     points,
     segments,
     polygons,
-    circles,
+    ellipses,
     arcs,
     angleMarkers,
     dimLines,
@@ -178,13 +190,23 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         />
       ))}
 
-      {elements.circles.map((circle, idx) => (
-        <Circle
+      {elements.ellipses.map((circle, idx) => (
+        <Ellipse
           key={`circle-${idx}`}
           {...circle}
           project={project}
           scale={layout.scale}
           label={circle.label}
+        />
+      ))}
+
+      {elements.sectors.map((sector, idx) => (
+        <Sector
+          key={`sector-${idx}`}
+          {...sector}
+          project={project}
+          scale={layout.scale}
+          label={sector.label}
         />
       ))}
 

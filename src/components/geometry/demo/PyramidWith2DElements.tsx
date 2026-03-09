@@ -26,7 +26,7 @@
 //       <GeometryFrame3D
 //         width={350}
 //         padding={[20, 30, 20, 30]} // 留足夠的 padding 給 DimLine
-//         // 🌟 展示 1：使用 Region 畫 3D 地板上的陰影/地毯
+//         // 展示 1：使用 Region 畫 3D 地板上的陰影/地毯
 //         regions={[
 //           {
 //             start: [-10, -10, 0], // 從 A 點往外擴展一點
@@ -40,7 +40,7 @@
 //             strokeWidth: 1,
 //           },
 //         ]}
-//         // 🌟 展示 2：使用 Polygon 畫 3D 空間中的懸浮截面
+//         // 展示 2：使用 Polygon 畫 3D 空間中的懸浮截面
 //         polygons={[
 //           {
 //             vertices: [A1, B1, C1, D1],
@@ -55,7 +55,7 @@
 //             },
 //           },
 //         ]}
-//         // 🌟 展示 3：完美透視的尺寸標註線 (DimLine)
+//         // 展示 3：完美透視的尺寸標註線 (DimLine)
 //         dimLines={[
 //           {
 //             // 將標註線放在 Y 軸 -12 的位置
@@ -63,7 +63,7 @@
 //             end: [L, -12, 0],
 //             label: "40",
 //             color: "#4b5563",
-//             // 🌟 關鍵：直接告訴它延伸線要連回目標點 A 和 B！
+//             // 關鍵：直接告訴它延伸線要連回目標點 A 和 B！
 //             extStart: A,
 //             extEnd: B,
 //           },
@@ -74,7 +74,7 @@
 //             end: [L + 15, L / 2, h],
 //             label: "h = 50",
 //             color: "#dc2626",
-//             // 🌟 關鍵：底部延伸到中心點 O，頂部延伸到頂點 V！
+//             // 關鍵：底部延伸到中心點 O，頂部延伸到頂點 V！
 //             extStart: [L / 2, L / 2, 0],
 //             extEnd: V,
 //           },
@@ -152,7 +152,7 @@ export const PyramidWith2DElements = () => {
       <GeometryFrame3D
         width={350}
         padding={[20, 30, 20, 30]}
-        // 🌟 1. 改用 solids 陣列，傳入 LoftedSolid 定義
+        // 1. 改用 solids 陣列，傳入 LoftedSolid 定義
         solids={[
           {
             type: "lofted",
@@ -215,7 +215,7 @@ export const PyramidWith2DElements = () => {
             extEnd: V,
           },
         ]}
-        // 🌟 2. segments 現在只需要畫那條內部紅色的高，其他都被 LoftedSolid 包辦了！
+        // 2. segments 現在只需要畫那條內部紅色的高，其他都被 LoftedSolid 包辦了！
         segments={[
           {
             start: [L / 2, L / 2, 0],

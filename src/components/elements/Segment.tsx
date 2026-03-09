@@ -19,7 +19,7 @@ export const Segment: React.FC<
   label = null,
   project,
 }) => {
-  // 🌟 攔截並轉換
+  // 攔截並轉換
   const pxStart = project ? project(start) : start;
   const pxEnd = project ? project(end) : end;
 

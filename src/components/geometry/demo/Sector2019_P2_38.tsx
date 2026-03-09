@@ -5,9 +5,9 @@ import { GeometryFrame } from "../GeometryFrame";
 import {
   type PointProps,
   type SegmentProps,
-  type ArcProps,
   type RegionProps,
   type Vector2,
+  type SectorProps,
 } from "../../elements/types";
 
 export const Sector2019_P2_38: React.FC = () => {
@@ -33,22 +33,25 @@ export const Sector2019_P2_38: React.FC = () => {
     { pos: D, label: { text: "D", align: "bottom", offset: 5 } },
   ];
 
-  // 3. 定義線段
-  const segments: SegmentProps[] = [
-    { start: O, end: A }, // OA
-    { start: O, end: C }, // OC
-    { start: O, end: B }, // OB
-    { start: A, end: B }, // AB
-    { start: A, end: C }, // AC
+  // 3. 定義扇形 (取代原本的 OA, OC 線段以及最外圍的 AC 圓弧)
+  const sectors: SectorProps[] = [
+    {
+      center: O,
+      radius: 12,
+      startAngle: 0,
+      endAngle: Math.PI / 2,
+      stroke: "#000",
+    },
   ];
 
-  // 4. 定義圓弧 (最外圍的 AC 弧)
-  const arcs: ArcProps[] = [
-    { center: O, radius: 12, startAngle: 0, endAngle: Math.PI / 2 },
+  // 4. 定義內部輔助線段 (扣掉外框的 OA, OC 後，只剩內部的線)
+  const segments: SegmentProps[] = [
+    { start: O, end: B }, // OB
+    { start: A, end: B }, // AB
+    { start: A, end: C }, // 弦 AC
   ];
 
   // 5. 定義陰影區域 (區域 BCD)
-  // 路徑順序：C -> D (直線), D -> B (直線), B -> C (圓弧)
   const regions: RegionProps[] = [
     {
       start: C,
@@ -63,20 +66,22 @@ export const Sector2019_P2_38: React.FC = () => {
           sweepFlag: 0,
         },
       ],
-      fill: "default-hatch",
-      stroke: "#000",
-      strokeWidth: 1.5,
+      fill: {
+        type: "diagonal",
+        spacing: 6,
+        color: "#6b7280", // Tailwind gray-500
+      },
+      stroke: "none", // 外框已經由 Sector 畫好了，所以內部填色不用外框
     },
   ];
 
   return (
     <GeometryFrame
       width={400}
-      //height={400}
-      padding={0}
+      padding={30} // 補一點 padding 讓標籤不會被裁切
       points={points}
+      sectors={sectors}
       segments={segments}
-      arcs={arcs}
       regions={regions}
     />
   );

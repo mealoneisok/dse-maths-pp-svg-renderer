@@ -25,7 +25,7 @@ export const AngleMarker: React.FC<
   const labelObj = normalizeLabel(label);
   const dashArray = normalizeDash(dash);
 
-  // 🌟 判斷是否為 3D 空間 (藉由座標陣列長度)
+  // 判斷是否為 3D 空間 (藉由座標陣列長度)
   const is3D = vertex.length === 3 && p1.length === 3 && p2.length === 3;
 
   // 1. 智能偵測直角
@@ -52,7 +52,7 @@ export const AngleMarker: React.FC<
   let labelX = pxVertex[0];
   let labelY = pxVertex[1];
 
-  // 🌟 重新補回文字高度測量，找回完美的視覺通關留白
+  // 重新補回文字高度測量，找回完美的視覺通關留白
   const getClearance = (
     text: string | number | null | undefined,
     fontSize: any,
@@ -77,7 +77,7 @@ export const AngleMarker: React.FC<
     const px2 = project!(pt2Math);
 
     if (isOrthogonal) {
-      // 🌟 真正使用 3D 數學算出平行四邊形的第四個點 (Corner)，然後投影！
+      // 真正使用 3D 數學算出平行四邊形的第四個點 (Corner)，然後投影！
       const ptCornerMath = add(
         vertex as Vector3,
         add(scale(v1Vec, size), scale(v2Vec, size)),
@@ -221,7 +221,7 @@ export const AngleMarker: React.FC<
     }
   }
 
-  // 🌟 最終標籤位置決定
+  // 最終標籤位置決定
   const pxLabelPos = labelObj?.pos
     ? project
       ? project(labelObj.pos)

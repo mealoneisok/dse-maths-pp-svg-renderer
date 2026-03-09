@@ -60,7 +60,7 @@ export const ConeFrustum: React.FC<ConeFrustumProps> = ({
         </g>
       )}
 
-      {/* 🌟 2. 線框層 (Strokes) - 套用新的 Dash 參數 */}
+      {/* 2. 線框層 (Strokes) - 套用新的 Dash 參數 */}
 
       {/* A. 底部橢圓 (後半部被遮蔽：吃原本的 dash 參數) */}
       <path

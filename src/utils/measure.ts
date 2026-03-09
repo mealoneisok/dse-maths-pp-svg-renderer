@@ -75,7 +75,7 @@ function estimateTextSize(
   };
 }
 
-// 🌟 3. 主函式增加 allowEstimation 參數，預設為 true
+// 3. 主函式增加 allowEstimation 參數，預設為 true
 export function measureLatex(
   text: string | number,
   fontSize: string | number = LAYOUT.DEFAULT_FONT_SIZE,

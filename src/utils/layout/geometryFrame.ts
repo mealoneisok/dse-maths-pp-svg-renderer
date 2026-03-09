@@ -5,7 +5,7 @@ import {
   type PointProps,
   type SegmentProps,
   type PolygonProps,
-  type CircleProps,
+  type EllipseProps,
   type ArcProps,
   type AngleMarkerProps,
   type RegionProps,
@@ -24,7 +24,7 @@ export interface GeometryLayoutConfig {
     points?: PointProps[];
     segments?: SegmentProps[];
     polygons?: PolygonProps[];
-    circles?: CircleProps[];
+    ellipses?: EllipseProps[];
     arcs?: ArcProps[];
     angleMarkers?: AngleMarkerProps[];
     regions?: RegionProps[];
@@ -48,7 +48,7 @@ export function getPadding({
     points = [],
     segments = [],
     polygons = [],
-    circles = [],
+    ellipses = [],
     arcs = [],
     angleMarkers = [],
     regions = [],
@@ -60,7 +60,7 @@ export function getPadding({
     items:
       | SegmentProps[]
       | PolygonProps[]
-      | CircleProps[]
+      | EllipseProps[]
       | ArcProps[]
       | AngleMarkerProps[]
       | RegionProps[],
@@ -71,7 +71,7 @@ export function getPadding({
   const maxPixelOffset = Math.max(
     getMaxStroke(segments, 1.5),
     getMaxStroke(polygons, 1.5),
-    getMaxStroke(circles, 1.5),
+    getMaxStroke(ellipses, 1.5),
     getMaxStroke(arcs, 1.5),
     getMaxStroke(angleMarkers, 1.5),
     getMaxStroke(regions, 0),
@@ -158,7 +158,7 @@ export function getPadding({
   points.forEach((p) => checkLabelOverflow(p.label as LabelConfig));
   segments.forEach((s) => checkLabelOverflow(s.label as LabelConfig));
   polygons.forEach((p) => checkLabelOverflow(p.label as LabelConfig));
-  circles.forEach((c) => checkLabelOverflow(c.label as LabelConfig));
+  ellipses.forEach((c) => checkLabelOverflow(c.label as LabelConfig));
   arcs.forEach((a) => checkLabelOverflow(a.label as LabelConfig));
   angleMarkers.forEach((am) => checkLabelOverflow(am.label as LabelConfig));
 
@@ -174,7 +174,7 @@ export const computeBoundingBox = ({
   points = [],
   segments = [],
   polygons = [],
-  circles = [],
+  ellipses = [],
   arcs = [],
   regions = [],
 }: GeometryLayoutConfig["elements"]) => {
@@ -196,7 +196,7 @@ export const computeBoundingBox = ({
     addPoint(s.end[0], s.end[1]);
   });
   polygons.forEach((p) => p.vertices.forEach((v) => addPoint(v[0], v[1])));
-  circles.forEach((c) => {
+  ellipses.forEach((c) => {
     addPoint(c.center[0] - c.radius, c.center[1] - c.radius);
     addPoint(c.center[0] + c.radius, c.center[1] + c.radius);
   });

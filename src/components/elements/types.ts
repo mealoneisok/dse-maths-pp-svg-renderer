@@ -67,9 +67,26 @@ export interface PolygonProps {
   label?: LabelConfig | string | null;
 }
 
-export interface CircleProps {
+export interface EllipseProps {
   center: Vector2;
   radius: number;
+  rx?: number; // 橢圓長軸半徑
+  ry?: number; // 橢圓短軸半徑
+  rotation?: number; // 橢圓旋轉角度 (degrees)
+  fill?: string | PatternFillConfig;
+  stroke?: string;
+  strokeWidth?: number;
+  dash?: string;
+  label?: LabelConfig | string | null;
+}
+
+export interface SectorProps {
+  center: Vector2;
+  radius?: number;
+  rx?: number;
+  ry?: number;
+  startAngle: number;
+  endAngle: number;
   fill?: string | PatternFillConfig;
   stroke?: string;
   strokeWidth?: number;

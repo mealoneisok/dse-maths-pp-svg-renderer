@@ -5,7 +5,7 @@ export * from "./Axis";
 export * from "./Segment";
 export * from "./Arc";
 export * from "./Polygon";
-export * from "./Circle";
+export * from "./Ellipse";
 export * from "./Region";
 export * from "./Label";
 export * from "./PatternFill";
