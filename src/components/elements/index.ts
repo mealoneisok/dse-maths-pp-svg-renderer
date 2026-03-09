@@ -13,3 +13,4 @@ export * from "./Point";
 export * from "./RotationArrow";
 export * from "./Arrow";
 export * from "./AngleMarker";
+export * from "./DimLine";

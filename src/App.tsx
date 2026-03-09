@@ -14,6 +14,7 @@ import {
   Sector2019_P2_38,
   Hexagons2016_P2_23,
   Square2015_P1_13,
+  Rectangle2013_P1_17,
 } from "./components/geometry";
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
         <Pie2012_P2_16 />
         <Sector2019_P2_38 />
         <Square2015_P1_13 />
+        <Rectangle2013_P1_17 />
 
         <BarChart2012_P2_29 />
         <LineChart2014_P1_10 />

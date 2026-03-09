@@ -7,6 +7,7 @@ import {
   Polygon,
   Circle,
   Arc,
+  DimLine,
   Region,
   type LabelConfig,
   type PointProps,
@@ -16,6 +17,7 @@ import {
   type CircleProps,
   type AngleMarkerProps,
   type RegionProps,
+  type DimLineProps,
 } from "../elements";
 import { normalizeLabel } from "../../utils/type";
 import { useMemo } from "react";
@@ -32,6 +34,7 @@ interface GeometryFrameProps {
   arcs?: ArcProps[];
   angleMarkers?: AngleMarkerProps[];
   regions?: RegionProps[];
+  dimLines?: DimLineProps[];
 }
 
 export const GeometryFrame: React.FC<GeometryFrameProps> = ({
@@ -45,6 +48,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
   arcs = [],
   angleMarkers = [],
   regions = [],
+  dimLines = [],
 }) => {
   const layout = useMemo(() => {
     return calculateLayout({
@@ -53,7 +57,10 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
       padding,
       elements: {
         points,
-        segments,
+        segments: [
+          ...segments,
+          ...dimLines.map((dl) => ({ start: dl.start, end: dl.end }) as any),
+        ],
         polygons,
         circles,
         arcs,
@@ -238,6 +245,21 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
           {...pt} // 展開 type, markerSize, color 等
           pos={toPx(pt.pos)}
           label={getScaledLabel(pt.label, pt.pos[0], pt.pos[1])}
+        />
+      ))}
+
+      {/* 7. 渲染尺寸標註線 (DimLine) */}
+      {dimLines.map((dl, idx) => (
+        <DimLine
+          key={`dim-${idx}`}
+          {...dl} // 展開包含 rotation 等所有自定義屬性
+          start={toPx(dl.start)}
+          end={toPx(dl.end)}
+          label={getScaledLabel(
+            dl.label,
+            (dl.start[0] + dl.end[0]) / 2,
+            (dl.start[1] + dl.end[1]) / 2,
+          )}
         />
       ))}
     </svg>
