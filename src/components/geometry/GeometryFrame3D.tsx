@@ -13,8 +13,8 @@ import {
   Region,
   DimLine,
   AngleMarker,
-  type Point3DProps,
-  type Segment3DProps,
+  type PointProps,
+  type SegmentProps,
   type SolidDef,
   type AngleMarkerProps,
   type Vector3,
@@ -32,8 +32,8 @@ interface GeometryFrame3DProps {
   width: number;
   height?: number;
   padding?: number | [number, number, number, number];
-  points?: Point3DProps[];
-  segments?: Segment3DProps[];
+  points?: PointProps[];
+  segments?: SegmentProps[];
   solids?: SolidDef[];
   angleMarkers?: Omit<AngleMarkerProps, "project">[];
   polygons?: PolygonProps[];

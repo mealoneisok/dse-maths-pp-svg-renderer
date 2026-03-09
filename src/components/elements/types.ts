@@ -23,14 +23,6 @@ export interface PointProps {
   label?: LabelConfig | string | null;
 }
 
-export interface Point3DProps {
-  pos: Vector3;
-  label?: LabelConfig | string | null;
-  markerColor?: string;
-  showMarker?: boolean;
-  markerSize?: number;
-}
-
 export interface SegmentProps {
   start: Vector2 | Vector3;
   end: Vector2 | Vector3;
@@ -38,13 +30,6 @@ export interface SegmentProps {
   color?: string;
   dash?: string | boolean;
   label?: LabelConfig | string | null;
-}
-
-export interface Segment3DProps {
-  start: Vector3;
-  end: Vector3;
-  color?: string;
-  dash?: string;
 }
 
 export interface ArcProps {

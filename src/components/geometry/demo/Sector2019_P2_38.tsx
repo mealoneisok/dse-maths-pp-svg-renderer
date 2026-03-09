@@ -78,7 +78,6 @@ export const Sector2019_P2_38: React.FC = () => {
   return (
     <GeometryFrame
       width={400}
-      padding={30} // 補一點 padding 讓標籤不會被裁切
       points={points}
       sectors={sectors}
       segments={segments}

@@ -6,15 +6,23 @@ import {
   type SegmentProps,
   type PolygonProps,
   type EllipseProps,
+  type SectorProps,
   type ArcProps,
   type AngleMarkerProps,
   type RegionProps,
   type LabelConfig,
   type Vector2,
+  type DimLineProps,
 } from "../../components/elements";
 import { normalizePadding } from "../type";
-import { measureLatex } from "../measure";
 import { LAYOUT } from "@/constants";
+import {
+  getLabelPixelBounds,
+  normalizeBoundingBox,
+  getArcExtremePoints,
+  createOverflowAccumulator,
+  getElementsMaxStroke,
+} from "./geometryUtils";
 
 export interface GeometryLayoutConfig {
   width: number;
@@ -25,9 +33,11 @@ export interface GeometryLayoutConfig {
     segments?: SegmentProps[];
     polygons?: PolygonProps[];
     ellipses?: EllipseProps[];
+    sectors?: SectorProps[];
     arcs?: ArcProps[];
     angleMarkers?: AngleMarkerProps[];
     regions?: RegionProps[];
+    dimLines?: DimLineProps[];
   };
 }
 
@@ -49,48 +59,40 @@ export function getPadding({
     segments = [],
     polygons = [],
     ellipses = [],
+    sectors = [],
     arcs = [],
     angleMarkers = [],
     regions = [],
+    dimLines = [],
   },
 }: GeometryPaddingConfig) {
   const { minX, maxX, minY, maxY } = bounds;
 
-  const getMaxStroke = (
-    items:
-      | SegmentProps[]
-      | PolygonProps[]
-      | EllipseProps[]
-      | ArcProps[]
-      | AngleMarkerProps[]
-      | RegionProps[],
-    fallback: number,
-  ) =>
-    items.reduce((max, item) => Math.max(max, item.strokeWidth ?? fallback), 0);
-
-  const maxPixelOffset = Math.max(
-    getMaxStroke(segments, 1.5),
-    getMaxStroke(polygons, 1.5),
-    getMaxStroke(ellipses, 1.5),
-    getMaxStroke(arcs, 1.5),
-    getMaxStroke(angleMarkers, 1.5),
-    getMaxStroke(regions, 0),
-    points.reduce(
-      (max, p) => Math.max(max, p.showMarker ? (p.markerSize ?? 3) * 2 : 0),
-      0,
-    ),
+  // 1. 計算最大 Stroke Padding
+  const maxPixelOffset = getElementsMaxStroke(
+    [
+      segments,
+      polygons,
+      ellipses,
+      sectors,
+      arcs,
+      angleMarkers,
+      regions,
+      dimLines,
+    ],
+    points,
+    LAYOUT.DEFAULT_STROKE_WIDTH,
   );
 
   const strokePadding = maxPixelOffset / 2;
   const [pTop, pRight, pBot, pLeft] = basePadding.map((p) => p + strokePadding);
 
+  // 2. 初始比例尺計算
   const mathW = maxX - minX;
   const mathH = maxY - minY;
-  const finalWidth = width;
-
   const prelimHeight =
-    height ?? (finalWidth - pLeft - pRight) * (mathH / mathW) + pTop + pBot;
-  const prelimDrawW = finalWidth - pLeft - pRight;
+    height ?? (width - pLeft - pRight) * (mathH / mathW) + pTop + pBot;
+  const prelimDrawW = width - pLeft - pRight;
   const prelimDrawH = prelimHeight - pTop - pBot;
   const prelimScale = Math.min(prelimDrawW / mathW, prelimDrawH / mathH);
 
@@ -101,7 +103,7 @@ export function getPadding({
     cx - prelimDrawW / prelimScale / 2,
     cx + prelimDrawW / prelimScale / 2,
     pLeft,
-    finalWidth - pRight,
+    width - pRight,
   );
   const prelimScaleY = createLinearScale(
     cy - prelimDrawH / prelimScale / 2,
@@ -110,49 +112,21 @@ export function getPadding({
     pTop,
   );
 
-  let overflowTop = 0,
-    overflowRight = 0,
-    overflowBot = 0,
-    overflowLeft = 0;
+  // 3. 標籤溢出預測
+  const accumulator = createOverflowAccumulator(
+    pTop,
+    pRight,
+    pBot,
+    pLeft,
+    width,
+    prelimHeight,
+  );
 
   const checkLabelOverflow = (lbl?: LabelConfig) => {
-    if (!lbl || (!lbl.text && lbl.text !== 0) || !lbl.pos) return;
-
-    // 直接取用預先算好的中心點/頂點 (數學座標)
+    if (!lbl || !lbl.pos) return;
     const pxX = prelimScaleX(lbl.pos[0]);
     const pxY = prelimScaleY(lbl.pos[1]);
-    const { width: boxW, height: boxH } = measureLatex(
-      lbl.text,
-      lbl.fontSize || 14,
-    );
-
-    const offset = lbl.offset ?? 8;
-    const align = lbl.align || LAYOUT.DEFAULT_POINT_LABEL_ALIGN;
-
-    let foreignX = pxX,
-      foreignY = pxY;
-
-    if (align.includes("top")) foreignY = pxY - offset - boxH;
-    else if (align.includes("bottom")) foreignY = pxY + offset;
-    else foreignY = pxY - boxH / 2;
-
-    if (align.includes("left")) foreignX = pxX - offset - boxW;
-    else if (align.includes("right")) foreignX = pxX + offset;
-    else foreignX = pxX - boxW / 2;
-
-    if (foreignX < pLeft)
-      overflowLeft = Math.max(overflowLeft, pLeft - foreignX);
-    if (foreignX + boxW > finalWidth - pRight)
-      overflowRight = Math.max(
-        overflowRight,
-        foreignX + boxW - (finalWidth - pRight),
-      );
-    if (foreignY < pTop) overflowTop = Math.max(overflowTop, pTop - foreignY);
-    if (foreignY + boxH > prelimHeight - pBot)
-      overflowBot = Math.max(
-        overflowBot,
-        foreignY + boxH - (prelimHeight - pBot),
-      );
+    accumulator.add(getLabelPixelBounds(pxX, pxY, lbl));
   };
 
   points.forEach((p) => checkLabelOverflow(p.label as LabelConfig));
@@ -160,13 +134,17 @@ export function getPadding({
   polygons.forEach((p) => checkLabelOverflow(p.label as LabelConfig));
   ellipses.forEach((c) => checkLabelOverflow(c.label as LabelConfig));
   arcs.forEach((a) => checkLabelOverflow(a.label as LabelConfig));
+  sectors.forEach((s) => checkLabelOverflow(s.label as LabelConfig));
   angleMarkers.forEach((am) => checkLabelOverflow(am.label as LabelConfig));
+  dimLines.forEach((dl) => checkLabelOverflow(dl.label as LabelConfig));
+
+  const overflow = accumulator.get();
 
   return {
-    top: pTop + overflowTop,
-    right: pRight + overflowRight,
-    bottom: pBot + overflowBot,
-    left: pLeft + overflowLeft,
+    top: pTop + overflow.top,
+    right: pRight + overflow.right,
+    bottom: pBot + overflow.bottom,
+    left: pLeft + overflow.left,
   };
 }
 
@@ -175,8 +153,10 @@ export const computeBoundingBox = ({
   segments = [],
   polygons = [],
   ellipses = [],
+  sectors = [],
   arcs = [],
   regions = [],
+  dimLines = [],
 }: GeometryLayoutConfig["elements"]) => {
   let minX = Infinity,
     maxX = -Infinity,
@@ -195,6 +175,10 @@ export const computeBoundingBox = ({
     addPoint(s.start[0], s.start[1]);
     addPoint(s.end[0], s.end[1]);
   });
+  dimLines.forEach((dl) => {
+    addPoint(dl.start[0], dl.start[1]);
+    addPoint(dl.end[0], dl.end[1]);
+  });
   polygons.forEach((p) => p.vertices.forEach((v) => addPoint(v[0], v[1])));
   ellipses.forEach((c) => {
     addPoint(c.center[0] - c.radius, c.center[1] - c.radius);
@@ -205,45 +189,36 @@ export const computeBoundingBox = ({
     r.paths.forEach((p) => addPoint(p.to[0], p.to[1]));
   });
 
-  arcs.forEach((a) => {
-    let s = a.startAngle,
-      e = a.endAngle;
-    while (e < s) e += 2 * Math.PI;
-
-    addPoint(
-      a.center[0] + a.radius * Math.cos(s),
-      a.center[1] + a.radius * Math.sin(s),
-    );
-    addPoint(
-      a.center[0] + a.radius * Math.cos(e),
-      a.center[1] + a.radius * Math.sin(e),
-    );
-
-    for (let i = 0; i < 4; i++) {
-      let ext = (i * Math.PI) / 2;
-      while (ext < s) ext += 2 * Math.PI;
-      if (ext <= e) {
-        addPoint(
-          a.center[0] + a.radius * Math.cos(ext),
-          a.center[1] + a.radius * Math.sin(ext),
-        );
-      }
-    }
+  // Sector 與 Arc 共用極值計算
+  sectors.forEach((s) => {
+    const actualRx = s.rx ?? s.radius ?? 0;
+    const actualRy = s.ry ?? s.radius ?? actualRx;
+    addPoint(s.center[0], s.center[1]); // Sector 需加入圓心
+    getArcExtremePoints(
+      s.center,
+      actualRx,
+      actualRy,
+      s.startAngle,
+      s.endAngle,
+    ).forEach((pt) => addPoint(pt[0], pt[1]));
   });
 
-  // Default fallback 提早 return
-  if (minX === Infinity) return { minX: 0, maxX: 100, minY: 0, maxY: 100 };
+  arcs.forEach((a) => {
+    getArcExtremePoints(
+      a.center,
+      a.radius,
+      a.radius,
+      a.startAngle,
+      a.endAngle,
+    ).forEach((pt) => addPoint(pt[0], pt[1]));
+  });
 
-  if (maxX === minX) {
-    minX -= 1;
-    maxX += 1;
-  }
-  if (maxY === minY) {
-    minY -= 1;
-    maxY += 1;
-  }
-
-  return { minX, maxX, minY, maxY };
+  return normalizeBoundingBox(minX, maxX, minY, maxY, {
+    minX: 0,
+    maxX: 100,
+    minY: 0,
+    maxY: 100,
+  });
 };
 
 export function calculateLayout({
@@ -253,7 +228,6 @@ export function calculateLayout({
   elements,
 }: GeometryLayoutConfig) {
   const bounds = computeBoundingBox(elements);
-
   const finalPadding = getPadding({
     width,
     height,
@@ -264,16 +238,15 @@ export function calculateLayout({
 
   const { minX, maxX, minY, maxY } = bounds;
   const { top: pTop, right: pRight, bottom: pBot, left: pLeft } = finalPadding;
+
   const mathW = maxX - minX;
   const mathH = maxY - minY;
-  const finalWidth = width;
-
   const finalHeight =
-    height ?? (finalWidth - pLeft - pRight) * (mathH / mathW) + pTop + pBot;
-  const drawW = finalWidth - pLeft - pRight;
+    height ?? (width - pLeft - pRight) * (mathH / mathW) + pTop + pBot;
+  const drawW = width - pLeft - pRight;
   const drawH = finalHeight - pTop - pBot;
-  const finalScale = Math.min(drawW / mathW, drawH / mathH);
 
+  const finalScale = Math.min(drawW / mathW, drawH / mathH);
   const actualMathW = drawW / finalScale;
   const actualMathH = drawH / finalScale;
   const cx = (minX + maxX) / 2;
@@ -283,14 +256,14 @@ export function calculateLayout({
   const finalDomainY: Vector2 = [cy - actualMathH / 2, cy + actualMathH / 2];
 
   return {
-    finalWidth,
+    finalWidth: width,
     finalHeight,
     scale: finalScale,
     scaleX: createLinearScale(
       finalDomainX[0],
       finalDomainX[1],
       pLeft,
-      finalWidth - pRight,
+      width - pRight,
     ),
     scaleY: createLinearScale(
       finalDomainY[0],

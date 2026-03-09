@@ -1,11 +1,10 @@
 // src/utils/layout/geometryFrame3D.ts
 
-import { measureLatex } from "../measure";
 import { normalizePadding } from "../type";
 import type {
   SolidDef,
-  Point3DProps,
-  Segment3DProps,
+  PointProps,
+  SegmentProps,
   RegionProps,
   DimLineProps,
   PolygonProps,
@@ -14,14 +13,26 @@ import type {
 } from "../../components/elements";
 import type { AngleMarkerProps, Vector3 } from "../../components/elements";
 import { projectMath } from "../math";
+import { LAYOUT, PROJ_ELLIPSE_RATIO } from "@/constants";
+import {
+  getLabelPixelBounds,
+  normalizeBoundingBox,
+  createOverflowAccumulator,
+  getElementsMaxStroke,
+} from "./geometryUtils";
+
+const ensureVector3 = (v: any): Vector3 => {
+  if (v.length === 3) return v as Vector3;
+  return [v[0], v[1], 0] as Vector3; // 2D 點自動補 Z=0
+};
 
 interface Geometry3DLayoutConfig {
   width: number;
   height?: number;
   padding: number | [number, number, number, number];
   elements: {
-    points?: Point3DProps[];
-    segments?: Segment3DProps[];
+    points?: PointProps[];
+    segments?: SegmentProps[];
     solids?: SolidDef[];
     angleMarkers?: Omit<AngleMarkerProps, "project">[];
     polygons?: PolygonProps[];
@@ -45,35 +56,34 @@ export const computeBoundingBox3D = (
     if (pt2d[1] > maxY) maxY = pt2d[1];
   };
 
-  const addPoint3D = (pt3d: Vector3) => addMathPoint(projectMath(pt3d));
+  const addPoint3D = (pt: any) => addMathPoint(projectMath(ensureVector3(pt)));
 
-  // 1. Points & Segments
-  elements.points?.forEach((p) => addPoint3D(p.pos));
-  elements.segments?.forEach((s) => {
+  // 1. 基礎元素
+  elements.points?.forEach((p: any) => addPoint3D(p.pos));
+  elements.segments?.forEach((s: any) => {
     addPoint3D(s.start);
     addPoint3D(s.end);
   });
   elements.angleMarkers?.forEach((am) => {
-    addPoint3D(am.vertex as Vector3);
-    addPoint3D(am.p1 as Vector3);
-    addPoint3D(am.p2 as Vector3);
+    addPoint3D(am.vertex);
+    addPoint3D(am.p1);
+    addPoint3D(am.p2);
   });
 
-  elements.polygons?.forEach((p) =>
-    p.vertices.forEach((v) => addPoint3D(v as Vector3)),
-  );
+  // 2. 2D-in-3D 元素
+  elements.polygons?.forEach((p) => p.vertices.forEach((v) => addPoint3D(v)));
   elements.dimLines?.forEach((dl) => {
-    addPoint3D(dl.start as Vector3);
-    addPoint3D(dl.end as Vector3);
+    addPoint3D(dl.start);
+    addPoint3D(dl.end);
   });
   elements.regions?.forEach((r) => {
-    addPoint3D(r.start as Vector3);
+    addPoint3D(r.start);
     r.paths.forEach((p: RegionPathProps) => {
-      if (p.to) addPoint3D(p.to as Vector3);
+      if (p.to) addPoint3D(p.to);
     });
   });
 
-  // 2. Solids
+  // 3. 固體實體
   elements.solids?.forEach((solid) => {
     switch (solid.type) {
       case "polyhedron":
@@ -81,77 +91,63 @@ export const computeBoundingBox3D = (
         break;
       case "lofted":
         solid.baseVertices.forEach(([x, y]) => {
-          addPoint3D([x, y, 0]); // 底面
+          addPoint3D([x, y, 0]);
           addPoint3D([
             x * (solid.topScale ?? 1) + (solid.shift?.[0] ?? 0),
             y * (solid.topScale ?? 1) + (solid.shift?.[1] ?? 0),
             solid.height,
-          ]); // 頂面
+          ]);
         });
         break;
       case "sphere": {
         const center2D = projectMath(solid.center);
-        // 球體的 2D 輪廓永遠是正圓，因此 Y 軸無需壓縮
         addMathPoint([center2D[0] - solid.radius, center2D[1] - solid.radius]);
         addMathPoint([center2D[0] + solid.radius, center2D[1] + solid.radius]);
         break;
       }
       case "hemisphere": {
         const center2D = projectMath(solid.centerBase);
-        // 半球的上方是完美圓弧 (未壓縮)，下方是橢圓底面 (壓縮 0.3)
         addMathPoint([center2D[0] - solid.radius, center2D[1] - solid.radius]);
         addMathPoint([
           center2D[0] + solid.radius,
-          center2D[1] + solid.radius * 0.3,
+          center2D[1] + solid.radius * PROJ_ELLIPSE_RATIO,
         ]);
         break;
       }
       case "coneFrustum": {
         const bottom2D = projectMath(solid.centerBase);
-        // 底面橢圓的 Y 軸極值需乘上 0.3 透視常數
         addMathPoint([
           bottom2D[0] - solid.radiusBottom,
-          bottom2D[1] - solid.radiusBottom * 0.3,
+          bottom2D[1] - solid.radiusBottom * PROJ_ELLIPSE_RATIO,
         ]);
         addMathPoint([
           bottom2D[0] + solid.radiusBottom,
-          bottom2D[1] + solid.radiusBottom * 0.3,
+          bottom2D[1] + solid.radiusBottom * PROJ_ELLIPSE_RATIO,
         ]);
-
-        const top3D: Vector3 = [
+        const top2D = projectMath([
           solid.centerBase[0],
           solid.centerBase[1],
           solid.centerBase[2] + solid.height,
-        ];
-        const top2D = projectMath(top3D);
-        // 頂面橢圓的 Y 軸極值需乘上 0.3 透視常數
+        ]);
         addMathPoint([
           top2D[0] - solid.radiusTop,
-          top2D[1] - solid.radiusTop * 0.3,
+          top2D[1] - solid.radiusTop * PROJ_ELLIPSE_RATIO,
         ]);
         addMathPoint([
           top2D[0] + solid.radiusTop,
-          top2D[1] + solid.radiusTop * 0.3,
+          top2D[1] + solid.radiusTop * PROJ_ELLIPSE_RATIO,
         ]);
         break;
       }
     }
   });
 
-  // Default fallback
-  if (minX === Infinity) return { minX: -10, maxX: 10, minY: -10, maxY: 10 };
-
-  // 避免單點造成的無效 BBox
-  if (maxX === minX) {
-    minX -= 1;
-    maxX += 1;
-  }
-  if (maxY === minY) {
-    minY -= 1;
-    maxY += 1;
-  }
-
-  return { minX, maxX, minY, maxY };
+  return normalizeBoundingBox(minX, maxX, minY, maxY, {
+    minX: -10,
+    maxX: 10,
+    minY: -10,
+    maxY: 10,
+  });
 };
 
 export function calculateLayout3D({
@@ -163,110 +159,101 @@ export function calculateLayout3D({
   const bounds = computeBoundingBox3D(elements);
   const basePadding = normalizePadding(padding);
 
-  // 初步 BBox 計算 (Math 空間)
+  // --- 計算 Pixel-Perfect 退讓半徑 ---
+  const maxPixelOffset = getElementsMaxStroke(
+    [
+      elements.segments,
+      elements.polygons,
+      elements.dimLines,
+      elements.solids,
+      elements.angleMarkers,
+      elements.regions,
+    ],
+    elements.points,
+    LAYOUT.DEFAULT_STROKE_WIDTH,
+  );
+
+  const strokePadding = maxPixelOffset / 2;
+  const [pTop, pRight, pBot, pLeft] = basePadding.map((p) => p + strokePadding);
+
   const mathW = bounds.maxX - bounds.minX;
   const mathH = bounds.maxY - bounds.minY;
   const cx = (bounds.minX + bounds.maxX) / 2;
   const cy = (bounds.minY + bounds.maxY) / 2;
 
-  // 加入基礎 Padding 後的繪製區
   const prelimHeight =
-    height ??
-    (width - basePadding[1] - basePadding[3]) * (mathH / mathW) +
-      basePadding[0] +
-      basePadding[2];
-  const drawW = width - basePadding[1] - basePadding[3];
-  const drawH = prelimHeight - basePadding[0] - basePadding[2];
-
-  // 必須取 Uniform Scale (X, Y 共用同一個縮放比例)
+    height ?? (width - pLeft - pRight) * (mathH / mathW) + pTop + pBot;
+  const drawW = width - pLeft - pRight;
+  const drawH = prelimHeight - pTop - pBot;
   const scale = Math.min(drawW / mathW, drawH / mathH);
 
-  // --- 標籤溢出預測 (Label Overflow Check) ---
-  let overflowTop = 0,
-    overflowRight = 0,
-    overflowBot = 0,
-    overflowLeft = 0;
+  // --- 標籤溢出預測 ---
+  const accumulator = createOverflowAccumulator(
+    pTop,
+    pRight,
+    pBot,
+    pLeft,
+    width,
+    prelimHeight,
+  );
 
   const checkLabelOverflow = (pt3d: Vector3, lbl?: LabelConfig) => {
-    // lbl 已經在元件層被 normalize，如果有值就一定包含預設的 offset 與 align
-    if (!lbl || (!lbl.text && lbl.text !== 0)) return;
-
     const pt2D = projectMath(pt3d);
-    const pxX = basePadding[3] + drawW / 2 + (pt2D[0] - cx) * scale;
-    const pxY = basePadding[0] + drawH / 2 + (pt2D[1] - cy) * scale;
-
-    const { width: boxW, height: boxH } = measureLatex(lbl.text);
-
-    const offset = lbl.offset;
-    const align = lbl.align;
-
-    let foreignX = pxX;
-    let foreignY = pxY;
-
-    if (align && offset && align.includes("top"))
-      foreignY = pxY - offset - boxH;
-    else if (align && offset && align.includes("bottom"))
-      foreignY = pxY + offset;
-    else foreignY = pxY - boxH / 2;
-
-    if (align && offset && align.includes("left"))
-      foreignX = pxX - offset - boxW;
-    else if (align && offset && align.includes("right"))
-      foreignX = pxX + offset;
-    else foreignX = pxX - boxW / 2;
-
-    const leftExt = foreignX;
-    const rightExt = foreignX + boxW;
-    const topExt = foreignY;
-    const botExt = foreignY + boxH;
-
-    if (leftExt < basePadding[3])
-      overflowLeft = Math.max(overflowLeft, basePadding[3] - leftExt);
-    if (rightExt > width - basePadding[1])
-      overflowRight = Math.max(
-        overflowRight,
-        rightExt - (width - basePadding[1]),
-      );
-    if (topExt < basePadding[0])
-      overflowTop = Math.max(overflowTop, basePadding[0] - topExt);
-    if (botExt > prelimHeight - basePadding[2])
-      overflowBot = Math.max(
-        overflowBot,
-        botExt - (prelimHeight - basePadding[2]),
-      );
+    const pxX = pLeft + drawW / 2 + (pt2D[0] - cx) * scale;
+    const pxY = pTop + drawH / 2 + (pt2D[1] - cy) * scale;
+    accumulator.add(getLabelPixelBounds(pxX, pxY, lbl));
   };
 
   elements.points?.forEach((p) =>
-    checkLabelOverflow(p.pos, p.label as LabelConfig),
+    checkLabelOverflow(p.pos as unknown as Vector3, p.label as LabelConfig),
   );
+  elements.segments?.forEach((s) => {
+    const mid3D: Vector3 = [
+      (s.start[0] + s.end[0]) / 2,
+      (s.start[1] + s.end[1]) / 2,
+      ((s.start[2] ?? 0) + (s.end[2] ?? 0)) / 2,
+    ];
+    checkLabelOverflow(mid3D, s.label as LabelConfig);
+  });
+  elements.dimLines?.forEach((dl) => {
+    const mid3D: Vector3 = [
+      (dl.start[0] + dl.end[0]) / 2,
+      (dl.start[1] + dl.end[1]) / 2,
+      ((dl.start[2] ?? 0) + (dl.end[2] ?? 0)) / 2,
+    ];
+    checkLabelOverflow(mid3D, dl.label as LabelConfig);
+  });
   elements.angleMarkers?.forEach((am) =>
     checkLabelOverflow(am.vertex as Vector3, am.label as LabelConfig),
   );
+  elements.polygons?.forEach((p) => {
+    const sum = p.vertices.reduce(
+      (acc, v) => [acc[0] + v[0], acc[1] + v[1], (acc[2] ?? 0) + (v[2] ?? 0)],
+      [0, 0, 0],
+    );
+    const center = [
+      sum[0] / p.vertices.length,
+      sum[1] / p.vertices.length,
+      sum[2] ? sum[2] / p.vertices.length : 0,
+    ] as Vector3;
+    checkLabelOverflow(center, p.label as LabelConfig);
+  });
 
-  // 計算最終的畫布與 Origin
-  // 1. 取得真正的可用寬度 (扣除原本 padding 與 label overflow)
+  const overflow = accumulator.get();
+
   const finalDrawW =
-    width - (basePadding[1] + overflowRight) - (basePadding[3] + overflowLeft);
-
-  // 2. 若未指定 height，則根據最終可用寬度動態推算所需高度 (這行是修正空白的關鍵！)
+    width - (pRight + overflow.right) - (pLeft + overflow.left);
   const finalHeight =
     height ??
     finalDrawW * (mathH / mathW) +
-      (basePadding[0] + overflowTop) +
-      (basePadding[2] + overflowBot);
-
-  // 3. 取得真正的可用高度
+      (pTop + overflow.top) +
+      (pBot + overflow.bottom);
   const finalDrawH =
-    finalHeight -
-    (basePadding[0] + overflowTop) -
-    (basePadding[2] + overflowBot);
-
-  // 最終的精準縮放
+    finalHeight - (pTop + overflow.top) - (pBot + overflow.bottom);
   const finalScale = Math.min(finalDrawW / mathW, finalDrawH / mathH);
 
-  // 讓數學中心對齊繪製區的中心
-  const centerX_px = basePadding[3] + overflowLeft + finalDrawW / 2;
-  const centerY_px = basePadding[0] + overflowTop + finalDrawH / 2;
+  const centerX_px = pLeft + overflow.left + finalDrawW / 2;
+  const centerY_px = pTop + overflow.top + finalDrawH / 2;
 
   return {
     finalWidth: width,
