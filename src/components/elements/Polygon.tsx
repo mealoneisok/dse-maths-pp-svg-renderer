@@ -1,36 +1,34 @@
 // src/components/elements/Polygon.tsx
-
 import React from "react";
 import { Label } from "./Label";
 import { type PolygonProps } from "./types";
 import { normalizeLabel } from "../../utils/type";
 import { LAYOUT } from "../../constants";
 
-export const Polygon: React.FC<PolygonProps> = ({
+export const Polygon: React.FC<
+  PolygonProps & { project?: (pt: [number, number]) => [number, number] }
+> = ({
   vertices,
   fill = "none",
   stroke = LAYOUT.DEFAULT_COLOR,
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   label,
+  project,
 }) => {
   const labelObj = normalizeLabel(label);
-  // 若未提供 pos，預設取頂點的幾何中心（傳進來的 vertices 已經是像素座標）
-  const center = vertices.reduce(
-    (acc, v) => [acc[0] + v[0], acc[1] + v[1]],
-    [0, 0],
-  );
-  const pxX = labelObj?.pos?.[0] ?? center[0] / vertices.length;
-  const pxY = labelObj?.pos?.[1] ?? center[1] / vertices.length;
+
+  // 🌟 如果有傳入 project，就在這裡轉換；否則直接用原座標
+  const pxVertices = project ? vertices.map(project) : vertices;
 
   return (
     <g>
       <polygon
-        points={vertices.map((p) => `${p[0]},${p[1]}`).join(" ")}
+        points={pxVertices.map((p) => `${p[0]},${p[1]}`).join(" ")}
         fill={fill}
         stroke={stroke}
         strokeWidth={strokeWidth}
       />
-      {labelObj && <Label pos={[pxX, pxY]} {...labelObj} />}
+      {labelObj && <Label pos={labelObj.pos!} {...labelObj} />}
     </g>
   );
 };

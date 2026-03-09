@@ -1,11 +1,12 @@
 // src/components/elements/Point.tsx
-
 import { LAYOUT } from "../../constants";
 import { type PointProps } from "./types";
 import { Label } from "./Label";
 import { normalizeLabel } from "../../utils/type";
 
-export const Point: React.FC<PointProps> = ({
+export const Point: React.FC<
+  PointProps & { project?: (pt: [number, number]) => [number, number] }
+> = ({
   pos,
   type = "none",
   markerSize = 4,
@@ -13,8 +14,11 @@ export const Point: React.FC<PointProps> = ({
   markerColor = LAYOUT.DEFAULT_COLOR,
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   label,
+  project,
 }) => {
-  const [x, y] = pos;
+  const pxPos = project ? project(pos) : (pos as [number, number]);
+  const [x, y] = pxPos;
+
   const labelObj = normalizeLabel(label, {
     align: LAYOUT.DEFAULT_POINT_LABEL_ALIGN,
     offset: markerSize,
@@ -35,7 +39,7 @@ export const Point: React.FC<PointProps> = ({
           fill="none"
         />
       )}
-      {label && <Label {...labelObj} pos={pos} />}
+      {label && <Label {...labelObj} pos={pxPos} />}
     </g>
   );
 };

@@ -22,6 +22,7 @@ import {
 import { normalizeLabel } from "../../utils/type";
 import { useMemo } from "react";
 import { calculateLayout } from "../../utils/layout/geometryFrame";
+import { LAYOUT } from "@/constants";
 
 interface GeometryFrameProps {
   width: number;
@@ -50,61 +51,114 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
   regions = [],
   dimLines = [],
 }) => {
-  const layout = useMemo(() => {
-    return calculateLayout({
-      width,
-      height,
-      padding,
-      elements: {
-        points,
-        segments: [
-          ...segments,
-          ...dimLines.map((dl) => ({ start: dl.start, end: dl.end }) as any),
-        ],
-        polygons,
-        circles,
-        arcs,
-        angleMarkers,
-        regions,
-      },
-    });
+  // 🌟 1. 預處理 (Data Normalization)：為所有元素補齊中心點 (pos) 與 label
+  const getMidpoint = (
+    p1: [number, number],
+    p2: [number, number],
+  ): [number, number] => [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+
+  const elements = useMemo(() => {
+    return {
+      points: points.map((pt) => ({
+        ...pt,
+        label: normalizeLabel(pt.label, {
+          offset: 8,
+          align: LAYOUT.DEFAULT_POINT_LABEL_ALIGN,
+          pos: pt.pos,
+        }),
+      })),
+      segments: segments.map((s) => ({
+        ...s,
+        label: normalizeLabel(s.label, {
+          offset: 8,
+          align: "center",
+          pos: getMidpoint(s.start, s.end),
+        }),
+      })),
+      polygons: polygons.map((p) => {
+        const sum = p.vertices.reduce(
+          (acc, v) => [acc[0] + v[0], acc[1] + v[1]],
+          [0, 0],
+        );
+        const center: [number, number] = [
+          sum[0] / p.vertices.length,
+          sum[1] / p.vertices.length,
+        ];
+        return {
+          ...p,
+          label: normalizeLabel(p.label, {
+            offset: 8,
+            align: "center",
+            pos: center,
+          }),
+        };
+      }),
+      circles: circles.map((c) => ({
+        ...c,
+        label: normalizeLabel(c.label, {
+          offset: 8,
+          align: "center",
+          pos: c.center,
+        }),
+      })),
+      arcs: arcs.map((a) => ({
+        ...a,
+        label: normalizeLabel(a.label, {
+          offset: 8,
+          align: "center",
+          pos: a.center,
+        }),
+      })),
+      angleMarkers: angleMarkers.map((am) => ({
+        ...am,
+        label: normalizeLabel(am.label, { offset: 8, align: "center" }),
+      })),
+      dimLines: dimLines.map((dl) => ({
+        ...dl,
+        label: normalizeLabel(dl.label, {
+          offset: 8,
+          align: "center",
+          pos: getMidpoint(dl.start, dl.end),
+        }),
+      })),
+      regions,
+    };
   }, [
-    width,
-    height,
-    padding,
     points,
     segments,
     polygons,
     circles,
     arcs,
     angleMarkers,
+    dimLines,
     regions,
   ]);
 
-  // --- Helpers: 座標轉換器 ---
+  // 🌟 2. 計算 Layout
+  const layout = useMemo(() => {
+    return calculateLayout({
+      width,
+      height,
+      padding,
+      elements: {
+        ...elements,
+        segments: [...elements.segments, ...elements.dimLines],
+      },
+    });
+  }, [width, height, padding, elements]);
+
+  // 🌟 3. Helper: 純粹的投影轉換器 (不帶任何預設值邏輯)
   const toPxX = (mathX: number) => layout.scaleX(mathX);
   const toPxY = (mathY: number) => layout.scaleY(mathY);
-  const toPx = (pt: [number, number]): [number, number] => [
+  const project = (pt: [number, number]): [number, number] => [
     toPxX(pt[0]),
     toPxY(pt[1]),
   ];
-  const toPxDist = (mathDist: number, refX: number = 0) =>
-    Math.abs(toPxX(refX + mathDist) - toPxX(refX));
 
-  const getScaledLabel = (
-    rawLabel: LabelConfig | string | null | undefined,
-    defaultMathX: number,
-    defaultMathY: number,
-  ) => {
-    const labelObj = normalizeLabel(rawLabel, {});
-    if (!labelObj) return undefined;
-    return {
-      ...labelObj,
-      pos: toPx([
-        labelObj.pos?.[0] ?? defaultMathX,
-        labelObj.pos?.[1] ?? defaultMathY,
-      ]),
-    };
+  // 乾淨的標籤投影
+  const projectLabel = (lbl?: LabelConfig) => {
+    if (!lbl) return undefined;
+    return { ...lbl, pos: lbl.pos ? project(lbl.pos) : undefined };
   };
 
   return (
@@ -116,150 +170,80 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {/* 0. 繪製陰影區域 */}
-      {regions
+      {elements.regions
         .filter((r) => r?.start && r?.paths)
         .map((region, idx) => (
           <Region
             key={`region-${idx}`}
-            {...region} // 自動展開 fill, stroke, strokeWidth 等樣式
-            start={toPx(region.start)}
-            paths={
-              region.paths
-                .filter((p) => p?.to)
-                .map((p) => ({
-                  ...p,
-                  to: toPx(p.to),
-                  radius: p.radius ? toPxDist(p.radius) : undefined,
-                })) as any
-            }
+            {...region}
+            project={project}
+            scaleX={toPxX}
           />
         ))}
 
-      {/* 1. 渲染多邊形 */}
-      {polygons.map((poly, idx) => {
-        const center = poly.vertices.reduce(
-          (acc, v) => [acc[0] + v[0], acc[1] + v[1]],
-          [0, 0],
-        );
-        const defaultMathPos = [
-          center[0] / poly.vertices.length,
-          center[1] / poly.vertices.length,
-        ];
+      {elements.polygons.map((poly, idx) => (
+        <Polygon
+          key={`poly-${idx}`}
+          {...poly}
+          project={project}
+          label={projectLabel(poly.label)}
+        />
+      ))}
 
-        return (
-          <Polygon
-            key={`poly-${idx}`}
-            {...poly} // 展開全部樣式參數
-            vertices={poly.vertices.map(toPx)}
-            label={getScaledLabel(
-              poly.label,
-              defaultMathPos[0],
-              defaultMathPos[1],
-            )}
-          />
-        );
-      })}
-
-      {/* 2. 渲染圓形 */}
-      {circles.map((circle, idx) => (
+      {elements.circles.map((circle, idx) => (
         <Circle
           key={`circle-${idx}`}
-          {...circle} // 展開 fill, stroke, dash 等
-          center={toPx(circle.center)} // 後方屬性會覆寫前面展開的 math 座標
-          radius={toPxDist(circle.radius, circle.center[0])}
-          label={getScaledLabel(
-            circle.label,
-            circle.center[0],
-            circle.center[1],
-          )}
+          {...circle}
+          project={project}
+          scaleX={toPxX}
+          label={projectLabel(circle.label)}
         />
       ))}
 
-      {/* 3. 渲染圓弧 */}
-      {arcs.map((arc, idx) => {
-        const rx = toPxDist(arc.radius, arc.center[0]);
-        const ry = Math.abs(
-          layout.scaleY(arc.center[1] + arc.radius) -
-            layout.scaleY(arc.center[1]),
-        );
-        const sx = toPxX(arc.center[0] + arc.radius * Math.cos(arc.startAngle));
-        const sy = toPxY(arc.center[1] + arc.radius * Math.sin(arc.startAngle));
-        const ex = toPxX(arc.center[0] + arc.radius * Math.cos(arc.endAngle));
-        const ey = toPxY(arc.center[1] + arc.radius * Math.sin(arc.endAngle));
+      {elements.arcs.map((arc, idx) => (
+        <Arc
+          key={`arc-${idx}`}
+          {...arc}
+          project={project}
+          scaleX={toPxX}
+          scaleY={toPxY}
+          label={projectLabel(arc.label)}
+        />
+      ))}
 
-        let diff = arc.endAngle - arc.startAngle;
-        while (diff < 0) diff += 2 * Math.PI;
-
-        return (
-          <Arc
-            key={`arc-${idx}`}
-            {...arc} // 展開 fill, stroke 等
-            center={toPx(arc.center)}
-            radius={rx} // 覆寫成計算後的 px 半徑
-            _svgParams={{
-              sx,
-              sy,
-              ex,
-              ey,
-              rx,
-              ry,
-              largeArc: diff > Math.PI ? 1 : 0,
-              sweep: 0,
-            }}
-            label={getScaledLabel(arc.label, arc.center[0], arc.center[1])}
-          />
-        );
-      })}
-
-      {/* 4. 渲染線段 */}
-      {segments.map((seg, idx) => (
+      {elements.segments.map((seg, idx) => (
         <Segment
           key={`seg-${idx}`}
-          {...seg} // 展開 strokeWidth, color, dash 等
-          start={toPx(seg.start)}
-          end={toPx(seg.end)}
-          label={getScaledLabel(
-            seg.label,
-            (seg.start[0] + seg.end[0]) / 2,
-            (seg.start[1] + seg.end[1]) / 2,
-          )}
+          {...seg}
+          project={project}
+          label={projectLabel(seg.label)}
         />
       ))}
 
-      {/* 5. 渲染角度標記 */}
-      {angleMarkers.map((am, idx) => (
+      {elements.angleMarkers.map((am, idx) => (
         <AngleMarker
           key={`am-${idx}`}
-          {...am} // 展開 size, color, strokeWidth 等
-          vertex={toPx(am.vertex)}
-          p1={toPx(am.p1)}
-          p2={toPx(am.p2)}
+          {...am}
+          project={project}
+          label={projectLabel(am.label)}
         />
       ))}
 
-      {/* 6. 渲染點與標籤 */}
-      {points.map((pt, idx) => (
+      {elements.points.map((pt, idx) => (
         <Point
           key={`pt-${idx}`}
-          {...pt} // 展開 type, markerSize, color 等
-          pos={toPx(pt.pos)}
-          label={getScaledLabel(pt.label, pt.pos[0], pt.pos[1])}
+          {...pt}
+          project={project}
+          label={projectLabel(pt.label)}
         />
       ))}
 
-      {/* 7. 渲染尺寸標註線 (DimLine) */}
-      {dimLines.map((dl, idx) => (
+      {elements.dimLines.map((dl, idx) => (
         <DimLine
           key={`dim-${idx}`}
-          {...dl} // 展開包含 rotation 等所有自定義屬性
-          start={toPx(dl.start)}
-          end={toPx(dl.end)}
-          label={getScaledLabel(
-            dl.label,
-            (dl.start[0] + dl.end[0]) / 2,
-            (dl.start[1] + dl.end[1]) / 2,
-          )}
+          {...dl}
+          project={project}
+          label={projectLabel(dl.label)}
         />
       ))}
     </svg>

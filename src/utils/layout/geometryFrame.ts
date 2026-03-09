@@ -11,7 +11,7 @@ import {
   type RegionProps,
   type LabelConfig,
 } from "../../components/elements";
-import { normalizeLabel, normalizePadding } from "../type";
+import { normalizePadding } from "../type";
 import { measureLatex } from "../measure";
 import { LAYOUT } from "@/constants";
 
@@ -105,23 +105,19 @@ export function getPadding({
     overflowBot = 0,
     overflowLeft = 0;
 
-  const checkLabelOverflow = (
-    mathX: number,
-    mathY: number,
-    rawLabel?: LabelConfig | string | null,
-  ) => {
-    const labelObj = normalizeLabel(rawLabel);
-    if (!labelObj || (!labelObj.text && labelObj.text !== 0)) return;
+  const checkLabelOverflow = (lbl?: LabelConfig) => {
+    if (!lbl || (!lbl.text && lbl.text !== 0) || !lbl.pos) return;
 
-    const pxX = prelimScaleX(mathX);
-    const pxY = prelimScaleY(mathY);
+    // 直接取用預先算好的中心點/頂點 (數學座標)
+    const pxX = prelimScaleX(lbl.pos[0]);
+    const pxY = prelimScaleY(lbl.pos[1]);
     const { width: boxW, height: boxH } = measureLatex(
-      labelObj.text,
-      labelObj.fontSize || 14,
+      lbl.text,
+      lbl.fontSize || 14,
     );
 
-    const offset = labelObj.offset ?? 8;
-    const align = labelObj.align || LAYOUT.DEFAULT_POINT_LABEL_ALIGN;
+    const offset = lbl.offset ?? 8;
+    const align = lbl.align || LAYOUT.DEFAULT_POINT_LABEL_ALIGN;
 
     let foreignX = pxX,
       foreignY = pxY;
@@ -149,47 +145,12 @@ export function getPadding({
       );
   };
 
-  points.forEach((p) => checkLabelOverflow(p.pos[0], p.pos[1], p.label));
-  segments.forEach((s) => {
-    const lbl = normalizeLabel(s.label);
-    checkLabelOverflow(
-      lbl?.pos?.[0] ?? (s.start[0] + s.end[0]) / 2,
-      lbl?.pos?.[1] ?? (s.start[1] + s.end[1]) / 2,
-      lbl,
-    );
-  });
-  polygons.forEach((p) => {
-    const lbl = normalizeLabel(p.label);
-    if (!lbl) return;
-    const center = p.vertices.reduce(
-      (acc, v) => [acc[0] + v[0], acc[1] + v[1]],
-      [0, 0],
-    );
-    checkLabelOverflow(
-      lbl.pos?.[0] ?? center[0] / p.vertices.length,
-      lbl.pos?.[1] ?? center[1] / p.vertices.length,
-      lbl,
-    );
-  });
-  circles.forEach((c) => {
-    const lbl = normalizeLabel(c.label);
-    checkLabelOverflow(
-      lbl?.pos?.[0] ?? c.center[0],
-      lbl?.pos?.[1] ?? c.center[1],
-      lbl,
-    );
-  });
-  arcs.forEach((a) => {
-    const lbl = normalizeLabel(a.label);
-    checkLabelOverflow(
-      lbl?.pos?.[0] ?? a.center[0],
-      lbl?.pos?.[1] ?? a.center[1],
-      lbl,
-    );
-  });
-  angleMarkers.forEach((am) =>
-    checkLabelOverflow(am.vertex[0], am.vertex[1], am.label),
-  );
+  points.forEach((p) => checkLabelOverflow(p.label as LabelConfig));
+  segments.forEach((s) => checkLabelOverflow(s.label as LabelConfig));
+  polygons.forEach((p) => checkLabelOverflow(p.label as LabelConfig));
+  circles.forEach((c) => checkLabelOverflow(c.label as LabelConfig));
+  arcs.forEach((a) => checkLabelOverflow(a.label as LabelConfig));
+  angleMarkers.forEach((am) => checkLabelOverflow(am.label as LabelConfig));
 
   return {
     top: pTop + overflowTop,

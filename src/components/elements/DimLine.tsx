@@ -21,11 +21,13 @@ export interface DimLineProps extends Omit<SegmentProps, "start" | "end"> {
   rotation?: number; // 標籤旋轉角度 (degrees)
 }
 
-export const DimLine: React.FC<DimLineProps> = ({
+export const DimLine: React.FC<
+  DimLineProps & { project?: (pt: [number, number]) => [number, number] }
+> = ({
   start,
   end,
   label,
-  gapPadding = 12, // 預設留出適當呼吸空間
+  gapPadding = 12,
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   color = LAYOUT.DEFAULT_COLOR,
   arrowSize = LAYOUT.ARROW_SIZE,
@@ -34,24 +36,28 @@ export const DimLine: React.FC<DimLineProps> = ({
   extEnd = 0,
   extDash = "5 5",
   rotation = 0,
+  project,
 }) => {
+  const pxStart = project ? project(start) : start;
+  const pxEnd = project ? project(end) : end;
+
   const labelObj = normalizeLabel(label);
   const text = labelObj?.text;
   const fontSize = labelObj?.fontSize || LAYOUT.DEFAULT_AXIS_LABEL_FONT_SIZE;
 
-  const [x1, y1] = start;
-  const [x2, y2] = end;
+  const [x1, y1] = pxStart;
+  const [x2, y2] = pxEnd;
   const dx = x2 - x1;
   const dy = y2 - y1;
   const length = Math.hypot(dx, dy);
   const angle = Math.atan2(dy, dx);
 
-  // 繪製兩端的垂直延伸線 (Extension Lines)
   const renderExtensions = () => {
     const perpAngle = angle + Math.PI / 2;
     return (
       <g>
         {extStart !== 0 && (
+          // 內部呼叫 Segment 不傳 project，因為已經在 pixel 空間！
           <Segment
             start={[x1, y1]}
             end={[
@@ -79,14 +85,14 @@ export const DimLine: React.FC<DimLineProps> = ({
     );
   };
 
-  // 如果沒有文字，畫一條完整的雙箭頭線
+  // ... (保留後面的長度與字體切斷計算，把原本傳給 <Arrow> 的 start 換成 pxStart，end 換成 pxEnd 即可)
   if (!text && text !== 0) {
     return (
       <g>
         {renderExtensions()}
         <Arrow
-          start={start}
-          end={end}
+          start={pxStart}
+          end={pxEnd}
           showStartArrow
           showEndArrow
           arrowSize={arrowSize}
@@ -98,12 +104,9 @@ export const DimLine: React.FC<DimLineProps> = ({
     );
   }
 
-  // 計算文字所需的斷開間隙
   const strText = String(text);
   const { width, height } = measureLatex(strText, fontSize);
   const radRot = (rotation * Math.PI) / 180;
-
-  // 將文字的 Bounding Box 投影到線段的方向向量上
   const gap =
     Math.abs(width * Math.cos(angle - radRot)) +
     Math.abs(height * Math.sin(angle - radRot)) +
@@ -113,7 +116,6 @@ export const DimLine: React.FC<DimLineProps> = ({
   const midX = labelObj?.pos?.[0] ?? (x1 + x2) / 2;
   const midY = labelObj?.pos?.[1] ?? (y1 + y2) / 2;
 
-  // 計算斷開的兩個端點
   const p1: [number, number] = [
     midX - halfGap * Math.cos(angle),
     midY - halfGap * Math.sin(angle),
@@ -128,9 +130,8 @@ export const DimLine: React.FC<DimLineProps> = ({
       {renderExtensions()}
       {length > gap && (
         <>
-          {/* 上半段箭頭：箭頭放在 start，朝外 */}
           <Arrow
-            start={start}
+            start={pxStart}
             end={p1}
             showStartArrow
             showEndArrow={false}
@@ -139,10 +140,9 @@ export const DimLine: React.FC<DimLineProps> = ({
             color={color}
             strokeWidth={strokeWidth}
           />
-          {/* 下半段箭頭：箭頭放在 end，朝外 */}
           <Arrow
             start={p2}
-            end={end}
+            end={pxEnd}
             showStartArrow={false}
             showEndArrow
             arrowSize={arrowSize}

@@ -1,27 +1,38 @@
 // src/components/elements/Region.tsx
-
 import React from "react";
 import { type RegionProps } from "./types";
 import { normalizeFill } from "../../utils/type";
 import { PatternFill } from "./PatternFill";
 import { LAYOUT } from "../../constants";
 
-export const Region: React.FC<RegionProps> = ({
+export const Region: React.FC<
+  RegionProps & {
+    project?: (pt: [number, number]) => [number, number];
+    scaleX?: (v: number) => number;
+  }
+> = ({
   start,
   paths,
   fill = "none",
   stroke = LAYOUT.DEFAULT_COLOR,
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
+  project,
+  scaleX,
 }) => {
   const { fillValue, patternDef } = normalizeFill(fill);
+  const pxStart = project ? project(start) : start;
 
-  // 2. 計算路徑 d
-  let d = `M ${start[0]} ${start[1]}`;
+  let d = `M ${pxStart[0]} ${pxStart[1]}`;
   paths.forEach((p) => {
-    if (p.type === "line") {
-      d += ` L ${p.to[0]} ${p.to[1]}`;
-    } else if (p.type === "arc") {
-      d += ` A ${p.radius} ${p.radius} 0 ${p.largeArc || 0} ${p.sweepFlag || 0} ${p.to[0]} ${p.to[1]}`;
+    const pxTo = project && p.to ? project(p.to) : p.to;
+
+    if (p.type === "line" && pxTo) {
+      d += ` L ${pxTo[0]} ${pxTo[1]}`;
+    } else if (p.type === "arc" && pxTo) {
+      // 距離/半徑縮放
+      const rPx =
+        scaleX && p.radius ? Math.abs(scaleX(p.radius) - scaleX(0)) : p.radius;
+      d += ` A ${rPx} ${rPx} 0 ${p.largeArc || 0} ${p.sweepFlag || 0} ${pxTo[0]} ${pxTo[1]}`;
     }
   });
   d += " Z";

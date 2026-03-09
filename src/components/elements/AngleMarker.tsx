@@ -1,12 +1,13 @@
 // src/components/elements/AngleMarker.tsx
-
 import { type AngleMarkerProps } from "./types";
 import { LAYOUT } from "../../constants";
 import { Label } from "./Label";
 import { measureLatex } from "../../utils/measure";
 import { normalizeLabel, normalizeDash } from "../../utils/type";
 
-export const AngleMarker: React.FC<AngleMarkerProps> = ({
+export const AngleMarker: React.FC<
+  AngleMarkerProps & { project?: (pt: [number, number]) => [number, number] }
+> = ({
   vertex,
   p1,
   p2,
@@ -16,11 +17,19 @@ export const AngleMarker: React.FC<AngleMarkerProps> = ({
   dash = "solid",
   isRightAngle = false,
   label,
+  project,
 }) => {
+  // 🌟 攔截並轉換
+  const pxVertex = project ? project(vertex) : vertex;
+  const pxP1 = project ? project(p1) : p1;
+  const pxP2 = project ? project(p2) : p2;
+
   const labelObj = normalizeLabel(label);
   const dashArray = normalizeDash(dash);
-  let angle1 = Math.atan2(p1[1] - vertex[1], p1[0] - vertex[0]);
-  let angle2 = Math.atan2(p2[1] - vertex[1], p2[0] - vertex[0]);
+
+  // 以轉換後的座標計算角度 (確保與螢幕顯示的角度一致)
+  let angle1 = Math.atan2(pxP1[1] - pxVertex[1], pxP1[0] - pxVertex[0]);
+  let angle2 = Math.atan2(pxP2[1] - pxVertex[1], pxP2[0] - pxVertex[0]);
 
   if (angle1 < 0) angle1 += 2 * Math.PI;
   if (angle2 < 0) angle2 += 2 * Math.PI;
@@ -30,41 +39,32 @@ export const AngleMarker: React.FC<AngleMarkerProps> = ({
   else if (diff < -Math.PI) angle2 += 2 * Math.PI;
 
   const sweepFlag = angle2 > angle1 ? 1 : 0;
-  const startX = vertex[0] + size * Math.cos(angle1);
-  const startY = vertex[1] + size * Math.sin(angle1);
-  const endX = vertex[0] + size * Math.cos(angle2);
-  const endY = vertex[1] + size * Math.sin(angle2);
+  const startX = pxVertex[0] + size * Math.cos(angle1);
+  const startY = pxVertex[1] + size * Math.sin(angle1);
+  const endX = pxVertex[0] + size * Math.cos(angle2);
+  const endY = pxVertex[1] + size * Math.sin(angle2);
 
   const midAngle = (angle1 + angle2) / 2;
 
-  // --- 🌟 智能定位機制 ---
-  let labelX = vertex[0];
-  let labelY = vertex[1];
+  let labelX = pxVertex[0];
+  let labelY = pxVertex[1];
 
   if (labelObj && labelObj.text) {
-    // 1. 測量文字大小
     const metrics = measureLatex(labelObj.text, labelObj.fontSize);
-
-    // 2. 改用固定的視覺通關半徑
-    // 通常文字的高度 (height) 是固定的，用它來推移能保證視覺上的環繞感一致。
-    // 你可以依據喜好微調這個乘數 (例如 0.6 或 0.8)
     const textClearance = metrics.height * 0.6;
-
-    // 3. 計算基礎的圖形半徑
     const effectiveSize = isRightAngle ? size * Math.SQRT2 : size;
     const userOffset = labelObj.offset !== undefined ? labelObj.offset : 4;
-
-    // 4. 總推移距離 = 圖形半徑 + 留白 + 固定的高度空間
     const distance = effectiveSize + userOffset + textClearance;
 
-    labelX = vertex[0] + distance * Math.cos(midAngle);
-    labelY = vertex[1] + distance * Math.sin(midAngle);
+    labelX = pxVertex[0] + distance * Math.cos(midAngle);
+    labelY = pxVertex[1] + distance * Math.sin(midAngle);
   }
+
   return (
     <g>
       {isRightAngle ? (
         <polyline
-          points={`${startX},${startY} ${vertex[0] + size * (Math.cos(angle1) + Math.cos(angle2))},${vertex[1] + size * (Math.sin(angle1) + Math.sin(angle2))} ${endX},${endY}`}
+          points={`${startX},${startY} ${pxVertex[0] + size * (Math.cos(angle1) + Math.cos(angle2))},${pxVertex[1] + size * (Math.sin(angle1) + Math.sin(angle2))} ${endX},${endY}`}
           stroke={color}
           strokeWidth={strokeWidth}
           fill="none"
