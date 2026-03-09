@@ -1,13 +1,13 @@
 // src/components/elements/Region.tsx
 import React from "react";
-import { type RegionProps, type Vector2 } from "./types";
+import { type ProjectFunctionType, type RegionProps } from "./types";
 import { normalizeFill } from "../../utils/type";
 import { PatternFill } from "./PatternFill";
 import { LAYOUT } from "../../constants";
 
 export const Region: React.FC<
   RegionProps & {
-    project?: (pt: Vector2) => Vector2;
+    project?: ProjectFunctionType;
     scale?: number;
   }
 > = ({

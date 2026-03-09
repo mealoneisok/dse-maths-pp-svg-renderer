@@ -7,22 +7,14 @@ import { Arrow } from "./Arrow";
 import { Label } from "./Label";
 import { Segment } from "./Segment";
 import { normalizeLabel } from "../../utils/type";
-import { type SegmentProps, type Vector2 } from "./types";
-
-export interface DimLineProps extends Omit<SegmentProps, "start" | "end"> {
-  start: Vector2;
-  end: Vector2;
-  gapPadding?: number; // 文字兩側的留白斷點距離
-  arrowSize?: number;
-  arrowAngle?: number;
-  extStart?: number; // 起點的垂直延伸線長度
-  extEnd?: number; // 終點的垂直延伸線長度
-  extDash?: string; // 延伸線的虛線樣式
-  rotation?: number; // 標籤旋轉角度 (degrees)
-}
+import {
+  type DimLineProps,
+  type Vector2,
+  type ProjectFunctionType,
+} from "./types";
 
 export const DimLine: React.FC<
-  DimLineProps & { project?: (pt: Vector2) => Vector2 }
+  DimLineProps & { project?: ProjectFunctionType }
 > = ({
   start,
   end,
@@ -38,8 +30,8 @@ export const DimLine: React.FC<
   rotation = 0,
   project,
 }) => {
-  const pxStart = project ? project(start) : start;
-  const pxEnd = project ? project(end) : end;
+  const pxStart = project ? project(start) : (start as Vector2);
+  const pxEnd = project ? project(end) : (end as Vector2);
 
   const labelObj = normalizeLabel(label);
   const text = labelObj?.text;
@@ -52,30 +44,43 @@ export const DimLine: React.FC<
   const length = Math.hypot(dx, dy);
   const angle = Math.atan2(dy, dx);
 
+  // 🌟 重新設計的延伸線邏輯
   const renderExtensions = () => {
-    const perpAngle = angle + Math.PI / 2;
+    const perpAngle = angle + Math.PI / 2; // 用於 2D fallback 的垂直角度
     return (
       <g>
-        {extStart !== 0 && (
-          // 內部呼叫 Segment 不傳 project，因為已經在 pixel 空間！
+        {extStart !== undefined && extStart !== 0 && (
           <Segment
-            start={[x1, y1]}
-            end={[
-              x1 + extStart * Math.cos(perpAngle),
-              y1 + extStart * Math.sin(perpAngle),
-            ]}
+            start={pxStart}
+            // 判斷：如果是座標陣列，就將目標點投影；否則走原本的 2D 垂直線邏輯
+            end={
+              Array.isArray(extStart)
+                ? project
+                  ? project(extStart)
+                  : (extStart as Vector2)
+                : [
+                    x1 + extStart * Math.cos(perpAngle),
+                    y1 + extStart * Math.sin(perpAngle),
+                  ]
+            }
             color={color}
             strokeWidth={strokeWidth}
             dash={extDash}
           />
         )}
-        {extEnd !== 0 && (
+        {extEnd !== undefined && extEnd !== 0 && (
           <Segment
-            start={[x2, y2]}
-            end={[
-              x2 + extEnd * Math.cos(perpAngle),
-              y2 + extEnd * Math.sin(perpAngle),
-            ]}
+            start={pxEnd}
+            end={
+              Array.isArray(extEnd)
+                ? project
+                  ? project(extEnd)
+                  : (extEnd as Vector2)
+                : [
+                    x2 + extEnd * Math.cos(perpAngle),
+                    y2 + extEnd * Math.sin(perpAngle),
+                  ]
+            }
             color={color}
             strokeWidth={strokeWidth}
             dash={extDash}
@@ -85,7 +90,7 @@ export const DimLine: React.FC<
     );
   };
 
-  // ... (保留後面的長度與字體切斷計算，把原本傳給 <Arrow> 的 start 換成 pxStart，end 換成 pxEnd 即可)
+  // ... (下方的 Arrow 與 Label 渲染邏輯完全保持不變) ...
   if (!text && text !== 0) {
     return (
       <g>
@@ -111,13 +116,12 @@ export const DimLine: React.FC<
     Math.abs(width * Math.cos(angle - radRot)) +
     Math.abs(height * Math.sin(angle - radRot)) +
     gapPadding;
-
   const halfGap = Math.min(gap / 2, Math.max(0, length / 2 - arrowSize));
 
   const pxLabelPos = labelObj?.pos
     ? project
       ? project(labelObj.pos)
-      : labelObj.pos
+      : (labelObj.pos as Vector2)
     : ([(x1 + x2) / 2, (y1 + y2) / 2] as Vector2);
 
   const midX = pxLabelPos[0];

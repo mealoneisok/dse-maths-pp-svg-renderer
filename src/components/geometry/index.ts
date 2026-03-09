@@ -10,3 +10,4 @@ export * from "./demo/Test3D";
 export * from "./demo/Pyramid2012_P1_18";
 export * from "./demo/InscribedSphere";
 export * from "./demo/PrismPractice_P2_39";
+export * from "./demo/PyramidWith2DElements";

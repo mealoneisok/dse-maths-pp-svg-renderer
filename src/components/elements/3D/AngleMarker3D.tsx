@@ -1,7 +1,7 @@
 // src/components/elements/3D/AngleMarker3D.tsx
 
 import React from "react";
-import type { Vector2, Vector3 } from "../types";
+import type { LabelConfig, Vector2, Vector3 } from "../types";
 import { Label } from "../Label";
 import { normalizeDash, normalizeLabel } from "@/utils/type";
 import { sub, add, scale, dot, normalize } from "@/utils/math";
@@ -14,7 +14,7 @@ export interface AngleMarker3DProps {
   color?: string;
   isRightAngle?: boolean;
   dash?: string;
-  label?: any;
+  label?: LabelConfig | string | null;
   project?: (pt: Vector3) => Vector2;
 }
 

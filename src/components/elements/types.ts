@@ -32,8 +32,8 @@ export interface Point3DProps {
 }
 
 export interface SegmentProps {
-  start: Vector2;
-  end: Vector2;
+  start: Vector2 | Vector3;
+  end: Vector2 | Vector3;
   strokeWidth?: number;
   color?: string;
   dash?: string | boolean;
@@ -60,7 +60,7 @@ export interface ArcProps {
 }
 
 export interface PolygonProps {
-  vertices: Vector2[];
+  vertices: Vector2[] | Vector3[];
   fill?: string;
   stroke?: string;
   strokeWidth?: number;
@@ -104,18 +104,30 @@ export interface PatternFillConfig {
 
 export interface RegionPathProps {
   type: "line" | "arc";
-  to: Vector2;
+  to: Vector2 | Vector3;
   radius?: number;
   largeArc?: 0 | 1;
   sweepFlag?: 0 | 1;
 }
 
 export interface RegionProps {
-  start: Vector2;
+  start: Vector2 | Vector3;
   paths: RegionPathProps[];
   fill?: string | PatternFillConfig;
   stroke?: string;
   strokeWidth?: number;
+}
+
+export interface DimLineProps extends Omit<SegmentProps, "start" | "end"> {
+  start: Vector2 | Vector3;
+  end: Vector2 | Vector3;
+  gapPadding?: number; // 文字兩側的留白斷點距離
+  arrowSize?: number;
+  arrowAngle?: number;
+  extStart?: number | Vector2 | Vector3; // 起點的垂直延伸線長度
+  extEnd?: number | Vector2 | Vector3; // 終點的垂直延伸線長度
+  extDash?: string; // 延伸線的虛線樣式
+  rotation?: number; // 標籤旋轉角度 (degrees)
 }
 
 export interface GridConfig {
@@ -138,7 +150,7 @@ export interface LoftedSolidProps {
   topScale?: number;
   shift?: Vector2;
   color?: string;
-  project?: (pt: Vector3) => Vector2;
+  project?: ProjectFunctionType;
   viewVector?: Vector3;
 }
 
@@ -146,7 +158,7 @@ export interface PolyhedronProps {
   vertices: Vector3[];
   faces: number[][]; // 頂點 index 陣列，順序必須從面的外部看是「逆時針 (CCW)」
   color?: string;
-  project?: (pt: Vector3) => Vector2;
+  project?: ProjectFunctionType;
   viewVector?: Vector3;
 }
 
@@ -154,7 +166,7 @@ export interface SphereProps {
   center: Vector3;
   radius: number; // 3D 空間中的半徑
   color?: string;
-  project?: (pt: Vector3) => Vector2;
+  project?: ProjectFunctionType;
   scale?: number;
 }
 
@@ -162,7 +174,7 @@ export interface HemisphereProps {
   centerBase: Vector3;
   radius: number; // 3D 空間中的半徑
   color?: string;
-  project?: (pt: Vector3) => Vector2;
+  project?: ProjectFunctionType;
   scale?: number;
 }
 
@@ -172,9 +184,11 @@ export interface ConeFrustumProps {
   radiusTop: number;
   height: number;
   color?: string;
-  project?: (pt: Vector3) => Vector2;
+  project?: ProjectFunctionType;
   scale?: number;
 }
+
+export type ProjectFunctionType = (pt: Vector2 | Vector3) => Vector2;
 
 type LoftedDef = { type: "lofted" } & Omit<
   LoftedSolidProps,

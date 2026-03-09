@@ -9,12 +9,18 @@ import {
   Sphere,
   ConeFrustum,
   Hemisphere,
+  Polygon,
+  Region,
+  DimLine,
   type Point3DProps,
   type Segment3DProps,
   type SolidDef,
   type AngleMarker3DProps,
   type Vector2,
   type Vector3,
+  type PolygonProps,
+  type RegionProps,
+  type DimLineProps,
 } from "../elements";
 import { AngleMarker3D } from "../elements/3D/AngleMarker3D";
 import { calculateLayout3D } from "../../utils/layout/geometryFrame3D";
@@ -29,6 +35,9 @@ interface GeometryFrame3DProps {
   segments?: Segment3DProps[];
   solids?: SolidDef[];
   angleMarkers?: Omit<AngleMarker3DProps, "project">[];
+  polygons?: PolygonProps[];
+  regions?: RegionProps[];
+  dimLines?: DimLineProps[];
 }
 
 export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
@@ -39,6 +48,9 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
   segments = [],
   solids = [],
   angleMarkers = [],
+  polygons = [],
+  regions = [],
+  dimLines = [],
 }) => {
   const processedPoints = useMemo(() => {
     return points.map((pt) => {
@@ -76,6 +88,9 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
         segments,
         solids,
         angleMarkers: processedAngleMarkers,
+        polygons,
+        regions,
+        dimLines,
       },
     });
   }, [
@@ -86,6 +101,9 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
     segments,
     solids,
     processedAngleMarkers,
+    polygons,
+    regions,
+    dimLines,
   ]);
 
   // 2. 根據算出的 scale 和 origin 建立終極 Project 函數
@@ -97,8 +115,8 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
     depthScale * Math.sin(angle),
   ];
 
-  const project = (pt3d: Vector3): Vector2 => {
-    const [x, y, z] = pt3d;
+  const project = (pt: Vector2 | Vector3): Vector2 => {
+    const [x, y, z = 0] = pt; // 容錯機制：如果只傳入 2D 座標，z 預設為 0
     const px = (x + y * depthScale * Math.cos(angle)) * layout.scale;
     const py = (-z - y * depthScale * Math.sin(angle)) * layout.scale;
     return [layout.origin[0] + px, layout.origin[1] + py];
@@ -110,6 +128,18 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
       height={layout.finalHeight}
       className="bg-white shadow-md transition-all duration-100 ease-out"
     >
+      {/* 🌟 渲染 3D 投影陰影 (Region) */}
+      {regions
+        .filter((r) => r?.start && r?.paths)
+        .map((region, idx) => (
+          <Region
+            key={`region3d-${idx}`}
+            {...region}
+            project={project}
+            scale={layout.scale}
+          />
+        ))}
+
       {/* 渲染 Solids */}
       {solids.map((solid, idx) => {
         switch (solid.type) {
@@ -163,6 +193,16 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
         }
       })}
 
+      {/* 🌟 渲染 3D 空間中的多邊形 (Polygon) */}
+      {polygons.map((poly, idx) => (
+        <Polygon
+          key={`poly3d-${idx}`}
+          {...poly}
+          project={project}
+          label={poly.label}
+        />
+      ))}
+
       {/* 渲染 Segments */}
       {segments.map((seg, idx) => (
         <Segment
@@ -171,6 +211,16 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
           end={project(seg.end)}
           color={seg.color}
           dash={seg.dash}
+        />
+      ))}
+
+      {/* 🌟 渲染 3D 空間中的標註線 (DimLine) */}
+      {dimLines.map((dl, idx) => (
+        <DimLine
+          key={`dim3d-${idx}`}
+          {...dl}
+          project={project}
+          label={dl.label}
         />
       ))}
 

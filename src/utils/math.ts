@@ -34,7 +34,16 @@ export const magnitude = (v: Vector3): number =>
 
 export const normalize = (v: Vector3): Vector3 => scale(v, 1 / magnitude(v));
 
-export const getMidpoint = (p1: Vector2, p2: Vector2): Vector2 => [
-  (p1[0] + p2[0]) / 2,
-  (p1[1] + p2[1]) / 2,
-];
+export const getMidpoint = (
+  p1: Vector2 | Vector3,
+  p2: Vector2 | Vector3,
+): Vector2 | Vector3 => {
+  if (p1.length === 3 || p2.length === 3) {
+    return [
+      (p1[0] + p2[0]) / 2,
+      (p1[1] + p2[1]) / 2,
+      ((p1[2] ?? 0) + (p2[2] ?? 0)) / 2,
+    ] as Vector3;
+  }
+  return [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2] as Vector2;
+};

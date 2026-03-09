@@ -6,6 +6,11 @@ import type {
   SolidDef,
   Point3DProps,
   Segment3DProps,
+  RegionProps,
+  DimLineProps,
+  PolygonProps,
+  RegionPathProps,
+  LabelConfig,
 } from "../../components/elements";
 import type {
   AngleMarker3DProps,
@@ -22,6 +27,9 @@ export interface Geometry3DLayoutConfig {
     segments?: Segment3DProps[];
     solids?: SolidDef[];
     angleMarkers?: Omit<AngleMarker3DProps, "project">[];
+    polygons?: PolygonProps[];
+    regions?: RegionProps[];
+    dimLines?: DimLineProps[];
   };
 }
 
@@ -46,7 +54,7 @@ export const computeBoundingBox3D = (
     minY = Infinity,
     maxY = -Infinity;
 
-  const addMathPoint = (pt2d: Vector2) => {
+  const addMathPoint = (pt2d: [number, number]) => {
     if (pt2d[0] < minX) minX = pt2d[0];
     if (pt2d[0] > maxX) maxX = pt2d[0];
     if (pt2d[1] < minY) minY = pt2d[1];
@@ -65,6 +73,21 @@ export const computeBoundingBox3D = (
     addPoint3D(am.vertex);
     addPoint3D(am.p1);
     addPoint3D(am.p2);
+  });
+
+  // 🌟 1.5 處理新的 2D 圖形轉換
+  elements.polygons?.forEach((p) =>
+    p.vertices.forEach((v) => addPoint3D(v as Vector3)),
+  );
+  elements.dimLines?.forEach((dl) => {
+    addPoint3D(dl.start as Vector3);
+    addPoint3D(dl.end as Vector3);
+  });
+  elements.regions?.forEach((r) => {
+    addPoint3D(r.start as Vector3);
+    r.paths.forEach((p: RegionPathProps) => {
+      if (p.to) addPoint3D(p.to as Vector3);
+    });
   });
 
   // 2. Solids
@@ -181,7 +204,7 @@ export function calculateLayout3D({
     overflowBot = 0,
     overflowLeft = 0;
 
-  const checkLabel = (pt3d: Vector3, lbl?: any) => {
+  const checkLabel = (pt3d: Vector3, lbl?: LabelConfig) => {
     // lbl 已經在元件層被 normalize，如果有值就一定包含預設的 offset 與 align
     if (!lbl || (!lbl.text && lbl.text !== 0)) return;
 
@@ -198,12 +221,16 @@ export function calculateLayout3D({
     let foreignX = pxX;
     let foreignY = pxY;
 
-    if (align.includes("top")) foreignY = pxY - offset - boxH;
-    else if (align.includes("bottom")) foreignY = pxY + offset;
+    if (align && offset && align.includes("top"))
+      foreignY = pxY - offset - boxH;
+    else if (align && offset && align.includes("bottom"))
+      foreignY = pxY + offset;
     else foreignY = pxY - boxH / 2;
 
-    if (align.includes("left")) foreignX = pxX - offset - boxW;
-    else if (align.includes("right")) foreignX = pxX + offset;
+    if (align && offset && align.includes("left"))
+      foreignX = pxX - offset - boxW;
+    else if (align && offset && align.includes("right"))
+      foreignX = pxX + offset;
     else foreignX = pxX - boxW / 2;
 
     const leftExt = foreignX;
@@ -227,8 +254,10 @@ export function calculateLayout3D({
       );
   };
 
-  elements.points?.forEach((p) => checkLabel(p.pos, p.label));
-  elements.angleMarkers?.forEach((am) => checkLabel(am.vertex, am.label));
+  elements.points?.forEach((p) => checkLabel(p.pos, p.label as LabelConfig));
+  elements.angleMarkers?.forEach((am) =>
+    checkLabel(am.vertex, am.label as LabelConfig),
+  );
 
   // 計算最終的畫布與 Origin
   // 1. 取得真正的可用寬度 (扣除原本 padding 與 label overflow)

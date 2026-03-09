@@ -3,10 +3,10 @@
 import { LAYOUT } from "../../constants";
 import { measureLatex } from "../../utils/measure";
 import katex from "katex";
-import type { Vector2 } from "./types";
+import type { Vector2, Vector3 } from "./types";
 
 interface LabelProps {
-  pos: Vector2;
+  pos: Vector2 | Vector3;
   align?: string;
   offset?: number;
   text?: string | number | null;
@@ -24,11 +24,15 @@ export const Label: React.FC<LabelProps> = ({
   color = LAYOUT.DEFAULT_COLOR,
   rotation = 0,
   fontSize = LAYOUT.DEFAULT_AXIS_LABEL_FONT_SIZE,
-  debug = true,
+  debug = false,
 }) => {
+  if (!pos || !Array.isArray(pos) || pos.length < 2) return null;
   if (!text && text !== 0) return null;
   const strText = String(text);
+
+  // 🌟 陣列解構天生支援「只取前兩個」：就算傳入的是 [x, y, z]，這裡也只會抓出 x 和 y！
   const [x, y] = pos;
+
   const { width: boxWidth, height: boxHeight } = measureLatex(
     strText,
     fontSize,

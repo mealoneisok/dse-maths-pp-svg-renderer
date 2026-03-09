@@ -18,6 +18,7 @@ import {
   type RegionProps,
   type DimLineProps,
   type Vector2,
+  type Vector3,
 } from "../elements";
 import { normalizeLabel } from "@/utils/type";
 import { useMemo } from "react";
@@ -53,7 +54,6 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
   dimLines = [],
 }) => {
   // 🌟 1. 預處理 (Data Normalization)：為所有元素補齊中心點 (pos) 與 label
-
   const elements = useMemo(() => {
     return {
       points: points.map((pt) => ({
@@ -69,7 +69,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         label: normalizeLabel(s.label, {
           offset: 8,
           align: "center",
-          pos: getMidpoint(s.start, s.end),
+          pos: getMidpoint(s.start, s.end) as Vector2,
         }),
       })),
       polygons: polygons.map((p) => {
@@ -115,7 +115,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         label: normalizeLabel(dl.label, {
           offset: 8,
           align: "center",
-          pos: getMidpoint(dl.start, dl.end),
+          pos: getMidpoint(dl.start, dl.end) as Vector2,
         }),
       })),
       regions,
@@ -144,7 +144,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
     });
   }, [width, height, padding, elements]);
 
-  const project = (pt: Vector2): Vector2 => [
+  const project = (pt: Vector2 | Vector3): Vector2 => [
     layout.scaleX(pt[0]),
     layout.scaleY(pt[1]),
   ];

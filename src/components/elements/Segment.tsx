@@ -1,11 +1,15 @@
 // src/components/elements/Segment.tsx
-import { type SegmentProps, type Vector2 } from "./types";
+import {
+  type SegmentProps,
+  type Vector2,
+  type ProjectFunctionType,
+} from "./types";
 import { LAYOUT } from "../../constants";
 import { Label } from "./Label";
 import { normalizeLabel, normalizeDash } from "../../utils/type";
 
 export const Segment: React.FC<
-  SegmentProps & { project?: (pt: Vector2) => Vector2 }
+  SegmentProps & { project?: ProjectFunctionType }
 > = ({
   start,
   end,

@@ -19,6 +19,7 @@ import {
   Pyramid2012_P1_18,
   InscribedSphere,
   PrismPractice_P2_39,
+  PyramidWith2DElements,
 } from "./components/geometry";
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
         />
       </div>
       <div className="flex flex-col gap-10 w-full items-center">
+        <PyramidWith2DElements />
         <PrismPractice_P2_39 />
         <InscribedSphere />
         <Test3D />

@@ -56,7 +56,16 @@ export function getPadding({
 }: GeometryPaddingConfig) {
   const { minX, maxX, minY, maxY } = bounds;
 
-  const getMaxStroke = (items: any[], fallback: number) =>
+  const getMaxStroke = (
+    items:
+      | SegmentProps[]
+      | PolygonProps[]
+      | CircleProps[]
+      | ArcProps[]
+      | AngleMarkerProps[]
+      | RegionProps[],
+    fallback: number,
+  ) =>
     items.reduce((max, item) => Math.max(max, item.strokeWidth ?? fallback), 0);
 
   const maxPixelOffset = Math.max(
