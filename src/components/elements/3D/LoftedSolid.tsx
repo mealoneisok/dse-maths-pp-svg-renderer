@@ -3,6 +3,8 @@
 import React from "react";
 import { Segment, type LoftedSolidProps, type Vector3 } from "..";
 import { sub, dot, cross } from "@/utils/math";
+import { normalizeDash } from "@/utils/type";
+import { LAYOUT } from "@/constants";
 
 export const LoftedSolid: React.FC<LoftedSolidProps> = ({
   baseVertices,
@@ -10,8 +12,10 @@ export const LoftedSolid: React.FC<LoftedSolidProps> = ({
   topScale = 1,
   shift = [0, 0],
   color = "#111827",
+  strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   project,
   viewVector,
+  dash = "dashed",
 }) => {
   if (!project || !viewVector) return null;
 
@@ -101,7 +105,8 @@ export const LoftedSolid: React.FC<LoftedSolidProps> = ({
           start={project(edge.start)}
           end={project(edge.end)}
           color={color}
-          dash={edge.visible ? undefined : "5 5"}
+          dash={edge.visible ? undefined : normalizeDash(dash)}
+          strokeWidth={strokeWidth}
         />
       ))}
     </g>

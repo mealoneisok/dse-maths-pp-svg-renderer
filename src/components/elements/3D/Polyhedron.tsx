@@ -3,6 +3,8 @@
 import React from "react";
 import { Segment, type PolyhedronProps, type Vector3 } from "..";
 import { sub, dot, cross } from "@/utils/math";
+import { LAYOUT } from "@/constants";
+import { normalizeDash } from "@/utils/type";
 
 export const Polyhedron: React.FC<PolyhedronProps> = ({
   vertices,
@@ -10,6 +12,8 @@ export const Polyhedron: React.FC<PolyhedronProps> = ({
   color = "#111827",
   project,
   viewVector,
+  strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
+  dash = "dashed",
 }) => {
   if (!project || !viewVector) return null;
 
@@ -53,7 +57,8 @@ export const Polyhedron: React.FC<PolyhedronProps> = ({
           start={project(edge.start)}
           end={project(edge.end)}
           color={color}
-          dash={edge.visible ? undefined : "5 5"}
+          dash={edge.visible ? undefined : normalizeDash(dash)}
+          strokeWidth={strokeWidth}
         />
       ))}
     </g>

@@ -6,7 +6,7 @@ import { measureLatex } from "../../utils/measure";
 import { Arrow } from "./Arrow";
 import { Label } from "./Label";
 import { Segment } from "./Segment";
-import { normalizeLabel } from "../../utils/type";
+import { normalizeLabel, normalizeDash } from "../../utils/type";
 import {
   type DimLineProps,
   type Vector2,
@@ -26,7 +26,7 @@ export const DimLine: React.FC<
   arrowAngle = LAYOUT.ARROW_ANGLE,
   extStart = 0,
   extEnd = 0,
-  extDash = "5 5",
+  extDash = "dashed",
   rotation = 0,
   project,
 }) => {
@@ -44,7 +44,8 @@ export const DimLine: React.FC<
   const length = Math.hypot(dx, dy);
   const angle = Math.atan2(dy, dx);
 
-  // 🌟 重新設計的延伸線邏輯
+  const extDashArray = normalizeDash(extDash);
+
   const renderExtensions = () => {
     const perpAngle = angle + Math.PI / 2; // 用於 2D fallback 的垂直角度
     return (
@@ -65,7 +66,7 @@ export const DimLine: React.FC<
             }
             color={color}
             strokeWidth={strokeWidth}
-            dash={extDash}
+            dash={extDashArray}
           />
         )}
         {extEnd !== undefined && extEnd !== 0 && (
@@ -83,7 +84,7 @@ export const DimLine: React.FC<
             }
             color={color}
             strokeWidth={strokeWidth}
-            dash={extDash}
+            dash={extDashArray}
           />
         )}
       </g>

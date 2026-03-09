@@ -150,32 +150,40 @@ export interface LoftedSolidProps {
   topScale?: number;
   shift?: Vector2;
   color?: string;
+  strokeWidth?: number;
   project?: ProjectFunctionType;
   viewVector?: Vector3;
+  dash?: string;
 }
 
 export interface PolyhedronProps {
   vertices: Vector3[];
   faces: number[][]; // 頂點 index 陣列，順序必須從面的外部看是「逆時針 (CCW)」
+  strokeWidth?: number;
   color?: string;
   project?: ProjectFunctionType;
   viewVector?: Vector3;
+  dash?: string;
 }
 
 export interface SphereProps {
   center: Vector3;
   radius: number; // 3D 空間中的半徑
+  strokeWidth?: number;
   color?: string;
   project?: ProjectFunctionType;
   scale?: number;
+  dash?: string;
 }
 
 export interface HemisphereProps {
   centerBase: Vector3;
   radius: number; // 3D 空間中的半徑
+  strokeWidth?: number;
   color?: string;
   project?: ProjectFunctionType;
   scale?: number;
+  dash?: string;
 }
 
 export interface ConeFrustumProps {
@@ -183,9 +191,11 @@ export interface ConeFrustumProps {
   radiusBottom: number;
   radiusTop: number;
   height: number;
+  strokeWidth?: number;
   color?: string;
   project?: ProjectFunctionType;
   scale?: number;
+  dash?: string;
 }
 
 export type ProjectFunctionType = (pt: Vector2 | Vector3) => Vector2;
