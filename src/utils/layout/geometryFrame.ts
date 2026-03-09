@@ -13,6 +13,7 @@ import {
 } from "../../components/elements";
 import { normalizeLabel, normalizePadding } from "../type";
 import { measureLatex } from "../measure";
+import { LAYOUT } from "@/constants";
 
 export interface GeometryLayoutConfig {
   width: number;
@@ -120,7 +121,7 @@ export function getPadding({
     );
 
     const offset = labelObj.offset ?? 8;
-    const align = labelObj.align || "center";
+    const align = labelObj.align || LAYOUT.DEFAULT_POINT_LABEL_ALIGN;
 
     let foreignX = pxX,
       foreignY = pxY;

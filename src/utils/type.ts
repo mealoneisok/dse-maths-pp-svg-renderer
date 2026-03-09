@@ -44,9 +44,9 @@ export const normalizeDash = (dash?: string | boolean): string | undefined => {
   }
 
   // 2. 處理預設的關鍵字與布林值
-  if (dash === true || dash === "dashed") return "6,4";
+  if (dash === true || dash === "dashed") return "3,3";
   if (dash === "dash-dot") return "15,6,4,6";
-  if (dash === "dotted") return "2,3";
+  if (dash === "dotted") return "1,1"; // 2 3
 
   // 3. 處理自訂字串 (如 "14 2" 或 "14, 2" 或 "14,2")
   if (typeof dash === "string") {

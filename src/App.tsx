@@ -15,6 +15,10 @@ import {
   Hexagons2016_P2_23,
   Square2015_P1_13,
   Rectangle2013_P1_17,
+  Test3D,
+  Pyramid2012_P1_18,
+  InscribedSphere,
+  PrismPractice_P2_39,
 } from "./components/geometry";
 
 function App() {
@@ -38,6 +42,10 @@ function App() {
         />
       </div>
       <div className="flex flex-col gap-10 w-full items-center">
+        <PrismPractice_P2_39 />
+        <InscribedSphere />
+        <Test3D />
+        <Pyramid2012_P1_18 />
         <PieChartDemo />
         <Hexagons2016_P2_23 />
         <Pie2012_P2_16 />

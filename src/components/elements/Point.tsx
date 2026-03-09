@@ -15,7 +15,11 @@ export const Point: React.FC<PointProps> = ({
   label,
 }) => {
   const [x, y] = pos;
-  const labelObj = normalizeLabel(label);
+  const labelObj = normalizeLabel(label, {
+    align: LAYOUT.DEFAULT_POINT_LABEL_ALIGN,
+    offset: markerSize,
+    color: markerColor,
+  });
 
   return (
     <g>
@@ -31,17 +35,7 @@ export const Point: React.FC<PointProps> = ({
           fill="none"
         />
       )}
-      {label && (
-        <Label
-          pos={labelObj?.pos || [x, y]}
-          align={labelObj?.align || "top-right"}
-          offset={
-            labelObj?.offset !== undefined ? labelObj?.offset : markerSize
-          }
-          text={labelObj?.text}
-          color={labelObj?.color || markerColor}
-        />
-      )}
+      {label && <Label {...labelObj} pos={pos} />}
     </g>
   );
 };
