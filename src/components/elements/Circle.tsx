@@ -4,13 +4,14 @@ import React from "react";
 import { Label } from "./Label";
 import { type CircleProps } from "./types";
 import { normalizeLabel, normalizeDash } from "../../utils/type";
+import { LAYOUT } from "../../constants";
 
 export const Circle: React.FC<CircleProps> = ({
   center,
   radius,
   fill = "none",
-  stroke = "#000",
-  strokeWidth = 1.5,
+  stroke = LAYOUT.DEFAULT_COLOR,
+  strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   dash,
   label,
 }) => {

@@ -3,22 +3,51 @@
 import { measureLatex } from "../measure";
 import { createLinearScale, formatTick, parseTicks } from "../ticks";
 import { LAYOUT } from "../../constants";
-import { type AxisConfig, type ParsedAxisConfig } from "../../components/types";
-import { type TickValue } from "../../components/elements";
+import {
+  type AxisConfig,
+  type ParsedAxisConfig,
+  type AxisRenderConfig,
+} from "../../components/types";
+import { type LabelConfig } from "../../components/elements";
 import { normalizeLabel, normalizePadding } from "../type";
 
+// --- 處理 Axis 預設值與解析 ---
+function parseAndNormalizeAxis(
+  axisCfg: AxisConfig | undefined,
+  type: "x" | "y",
+): ParsedAxisConfig {
+  const isY = type === "y";
+  const showArrow = axisCfg?.showArrow ?? false;
+
+  return {
+    ...axisCfg,
+    showNumbers: axisCfg?.showNumbers ?? true,
+    showTickLines: axisCfg?.showTickLines ?? isY,
+    showArrow,
+    grid: axisCfg?.grid ?? isY,
+    // 提早處理 extendEnd 邏輯
+    extendEnd:
+      axisCfg?.extendEnd ?? (showArrow ? LAYOUT.DEFAULT_AXIS_EXTEND_END : 0),
+    extendStart: axisCfg?.extendStart ?? 0,
+    // 提早處理 tick 相關預設值
+    tickLength: axisCfg?.tickLength ?? LAYOUT.DEFAULT_AXIS_TICK_LENGTH,
+    tickLineAlign: axisCfg?.tickLineAlign ?? 0,
+    ...parseTicks(axisCfg || {}),
+  };
+}
+
 export interface AxisMetrics {
+  titleObj?: LabelConfig; // 將正規化後的 titleObj 存起來給渲染層用
   titleOffset: number;
   totalPaddingRequired: number;
 }
 
 export function getAxisMetrics(
   type: "x" | "y",
-  axis: AxisConfig & { tickValues?: TickValue[] },
+  axis: ParsedAxisConfig,
 ): AxisMetrics {
-  // 1. 利用 reduce 簡化最大字體尺寸的測量
   const maxNumSize =
-    axis.showNumbers !== false && axis.tickValues
+    axis.showNumbers && axis.tickValues
       ? axis.tickValues.reduce((max, { val }) => {
           const displayStr = formatTick(val, axis.tickMap);
           if (!displayStr) return max;
@@ -27,31 +56,34 @@ export function getAxisMetrics(
         }, 0)
       : 0;
 
-  // 2. 移除冗餘三元運算，並修正 tickLineAlign 的預設值以吻合 ChartFrame.tsx
-  const showTickLines = axis.showTickLines ?? type === "y";
-  const tickLength = axis.tickLength ?? LAYOUT.DEFAULT_AXIS_TICK_LENGTH;
-  const tickLineAlign = axis.tickLineAlign ?? 0; // 🌟 修復空白 Bug：配合渲染層預設為 0
-
-  const tickOutwardSpace = showTickLines
-    ? tickLineAlign === 0
-      ? tickLength / 2
-      : tickLength
+  const tickOutwardSpace = axis.showTickLines
+    ? axis.tickLineAlign === 0
+      ? axis.tickLength! / 2
+      : axis.tickLength!
     : 0;
+
   const numSpace =
     tickOutwardSpace +
-    (axis.showNumbers !== false
-      ? LAYOUT.DEFAULT_AXIS_NUMBER_OFFSET + maxNumSize
-      : 0);
+    (axis.showNumbers ? LAYOUT.DEFAULT_AXIS_NUMBER_OFFSET + maxNumSize : 0);
 
-  const titleOffset =
+  const defaultTitleOffset =
     numSpace + (axis.title ? LAYOUT.DEFAULT_AXIS_TITLE_EXTRA_GAP : 0);
-  const titleObj = normalizeLabel(axis.title);
+
+  const titleObj = normalizeLabel(axis.title, {
+    align: type === "x" ? "bottom" : "top",
+    offset: defaultTitleOffset,
+    rotation: type === "y" ? -90 : 0,
+  });
+
+  const finalTitleOffset = titleObj?.offset ?? defaultTitleOffset;
 
   return {
-    titleOffset,
-    totalPaddingRequired: titleObj
-      ? titleOffset + measureLatex(titleObj.text!).height
-      : titleOffset,
+    titleObj,
+    titleOffset: finalTitleOffset,
+    totalPaddingRequired:
+      titleObj && titleObj.text
+        ? finalTitleOffset + measureLatex(titleObj.text).height
+        : numSpace,
   };
 }
 
@@ -107,11 +139,9 @@ export function getPadding({
 }: ChartFramePaddingConfig) {
   let [pTop, pRight, pBot, pLeft] = [0, 0, 0, 0];
 
+  // 這裡變得非常乾淨，直接取值
   const getExtend = (show: boolean, axis: ParsedAxisConfig) =>
-    show
-      ? (axis.extendEnd ??
-        (axis.showArrow ? LAYOUT.DEFAULT_AXIS_EXTEND_END : 0))
-      : 0;
+    show ? axis.extendEnd! : 0;
 
   const xExtend = getExtend(showXAxis, xAxis);
   const yExtend = getExtend(showYAxis, yAxis);
@@ -200,7 +230,6 @@ export function getPadding({
   };
 }
 
-// 🌟 統一參數介面風格 (Config & Result)
 export interface ChartLayoutConfig {
   width: number;
   height: number;
@@ -218,8 +247,8 @@ export interface ChartLayoutConfig {
 }
 
 export interface ChartLayoutResult {
-  _xAxis: ParsedAxisConfig;
-  _yAxis: ParsedAxisConfig;
+  _xAxis: AxisRenderConfig;
+  _yAxis: AxisRenderConfig;
   startX: number;
   endX: number;
   startY: number;
@@ -247,22 +276,8 @@ export function calculateLayout({
   const showYAxis = borders?.left ?? true;
   const showXAxis = borders?.bottom ?? true;
 
-  const _xAxis: ParsedAxisConfig = {
-    showNumbers: true,
-    showTickLines: false,
-    showArrow: false,
-    ...xAxisCfg,
-    ...parseTicks(xAxisCfg || {}),
-  };
-
-  const _yAxis: ParsedAxisConfig = {
-    showNumbers: true,
-    showTickLines: true,
-    showArrow: false,
-    grid: true,
-    ...yAxisCfg,
-    ...parseTicks(yAxisCfg || {}),
-  };
+  const rawXAxis = parseAndNormalizeAxis(xAxisCfg, "x");
+  const rawYAxis = parseAndNormalizeAxis(yAxisCfg, "y");
 
   const {
     top: pTop,
@@ -276,8 +291,8 @@ export function calculateLayout({
   } = getPadding({
     width,
     height,
-    xAxis: _xAxis,
-    yAxis: _yAxis,
+    xAxis: rawXAxis,
+    yAxis: rawYAxis,
     title,
     titleGap,
     basePadding,
@@ -291,6 +306,46 @@ export function calculateLayout({
   const startY = height - pBot,
     endY = pTop;
 
+  const _xAxis = {
+    ...rawXAxis,
+    title: xMetrics.titleObj,
+    start: [startX, startY] as [number, number],
+    end: [endX, startY] as [number, number],
+    extendStart: 0,
+    extendEnd: xExtend,
+    tickTextPos: "bottom",
+    skipZero: false,
+    grid: rawXAxis.grid
+      ? {
+          length: startY - endY,
+          direction: "negative" as const,
+          skipZero: false,
+          color: "#e0e0e0",
+          dash: "dotted",
+        }
+      : undefined,
+  };
+
+  const _yAxis = {
+    ...rawYAxis,
+    title: yMetrics.titleObj,
+    start: [startX, startY] as [number, number],
+    end: [startX, endY] as [number, number],
+    extendStart: 0,
+    extendEnd: yExtend,
+    tickTextPos: "left",
+    skipZero: false,
+    grid: rawYAxis.grid
+      ? {
+          length: endX - startX,
+          direction: "positive" as const,
+          skipZero: false,
+          color: "#e0e0e0",
+          dash: "dotted",
+        }
+      : undefined,
+  };
+
   return {
     _xAxis,
     _yAxis,
@@ -302,11 +357,11 @@ export function calculateLayout({
     yExtend,
     xMetrics,
     yMetrics,
-    scaleY: _yAxis.domain
-      ? createLinearScale(_yAxis.domain[0], _yAxis.domain[1], startY, endY)
+    scaleY: rawYAxis.domain
+      ? createLinearScale(rawYAxis.domain[0], rawYAxis.domain[1], startY, endY)
       : (v: number) => startY - v,
-    scaleX: _xAxis.domain
-      ? createLinearScale(_xAxis.domain[0], _xAxis.domain[1], startX, endX)
+    scaleX: rawXAxis.domain
+      ? createLinearScale(rawXAxis.domain[0], rawXAxis.domain[1], startX, endX)
       : (v: number) => startX + v,
     getBandX: (i: number, total: number) =>
       startX + (endX - startX) * ((i + 0.5) / total),

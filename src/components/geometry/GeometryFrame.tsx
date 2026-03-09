@@ -115,6 +115,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         .map((region, idx) => (
           <Region
             key={`region-${idx}`}
+            {...region} // 自動展開 fill, stroke, strokeWidth 等樣式
             start={toPx(region.start)}
             paths={
               region.paths
@@ -125,9 +126,6 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
                   radius: p.radius ? toPxDist(p.radius) : undefined,
                 })) as any
             }
-            fill={region.fill}
-            stroke={region.stroke}
-            strokeWidth={region.strokeWidth}
           />
         ))}
 
@@ -145,10 +143,8 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         return (
           <Polygon
             key={`poly-${idx}`}
+            {...poly} // 展開全部樣式參數
             vertices={poly.vertices.map(toPx)}
-            fill={poly.fill}
-            stroke={poly.stroke}
-            strokeWidth={poly.strokeWidth}
             label={getScaledLabel(
               poly.label,
               defaultMathPos[0],
@@ -162,12 +158,9 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
       {circles.map((circle, idx) => (
         <Circle
           key={`circle-${idx}`}
-          center={toPx(circle.center)}
+          {...circle} // 展開 fill, stroke, dash 等
+          center={toPx(circle.center)} // 後方屬性會覆寫前面展開的 math 座標
           radius={toPxDist(circle.radius, circle.center[0])}
-          fill={circle.fill}
-          stroke={circle.stroke}
-          strokeWidth={circle.strokeWidth}
-          dash={circle.dash}
           label={getScaledLabel(
             circle.label,
             circle.center[0],
@@ -182,7 +175,7 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         const ry = Math.abs(
           layout.scaleY(arc.center[1] + arc.radius) -
             layout.scaleY(arc.center[1]),
-        ); // Y軸特定距離
+        );
         const sx = toPxX(arc.center[0] + arc.radius * Math.cos(arc.startAngle));
         const sy = toPxY(arc.center[1] + arc.radius * Math.sin(arc.startAngle));
         const ex = toPxX(arc.center[0] + arc.radius * Math.cos(arc.endAngle));
@@ -194,10 +187,9 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         return (
           <Arc
             key={`arc-${idx}`}
+            {...arc} // 展開 fill, stroke 等
             center={toPx(arc.center)}
-            radius={rx}
-            startAngle={arc.startAngle}
-            endAngle={arc.endAngle}
+            radius={rx} // 覆寫成計算後的 px 半徑
             _svgParams={{
               sx,
               sy,
@@ -208,10 +200,6 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
               largeArc: diff > Math.PI ? 1 : 0,
               sweep: 0,
             }}
-            fill={arc.fill}
-            stroke={arc.stroke}
-            strokeWidth={arc.strokeWidth}
-            dash={arc.dash}
             label={getScaledLabel(arc.label, arc.center[0], arc.center[1])}
           />
         );
@@ -221,11 +209,9 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
       {segments.map((seg, idx) => (
         <Segment
           key={`seg-${idx}`}
+          {...seg} // 展開 strokeWidth, color, dash 等
           start={toPx(seg.start)}
           end={toPx(seg.end)}
-          strokeWidth={seg.strokeWidth}
-          color={seg.color}
-          dash={seg.dash}
           label={getScaledLabel(
             seg.label,
             (seg.start[0] + seg.end[0]) / 2,
@@ -234,18 +220,14 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
         />
       ))}
 
-      {/* 5. 渲染角度標記 (未變動) */}
+      {/* 5. 渲染角度標記 */}
       {angleMarkers.map((am, idx) => (
         <AngleMarker
           key={`am-${idx}`}
+          {...am} // 展開 size, color, strokeWidth 等
           vertex={toPx(am.vertex)}
           p1={toPx(am.p1)}
           p2={toPx(am.p2)}
-          size={am.size}
-          color={am.color}
-          strokeWidth={am.strokeWidth}
-          isRightAngle={am.isRightAngle}
-          label={am.label as any}
         />
       ))}
 
@@ -253,12 +235,8 @@ export const GeometryFrame: React.FC<GeometryFrameProps> = ({
       {points.map((pt, idx) => (
         <Point
           key={`pt-${idx}`}
+          {...pt} // 展開 type, markerSize, color 等
           pos={toPx(pt.pos)}
-          type={pt.type}
-          markerSize={pt.markerSize}
-          showMarker={pt.showMarker}
-          markerColor={pt.markerColor}
-          strokeWidth={pt.strokeWidth}
           label={getScaledLabel(pt.label, pt.pos[0], pt.pos[1])}
         />
       ))}

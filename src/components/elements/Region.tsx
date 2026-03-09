@@ -4,13 +4,14 @@ import React from "react";
 import { type RegionProps } from "./types";
 import { normalizeFill } from "../../utils/type";
 import { PatternFill } from "./PatternFill";
+import { LAYOUT } from "../../constants";
 
 export const Region: React.FC<RegionProps> = ({
   start,
   paths,
   fill = "none",
-  stroke = "none",
-  strokeWidth = 0,
+  stroke = LAYOUT.DEFAULT_COLOR,
+  strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
 }) => {
   const { fillValue, patternDef } = normalizeFill(fill);
 

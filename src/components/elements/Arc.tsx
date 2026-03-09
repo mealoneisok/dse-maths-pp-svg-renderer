@@ -4,6 +4,7 @@ import React from "react";
 import { Label } from "./Label";
 import { type ArcProps } from "./types";
 import { normalizeLabel, normalizeDash } from "../../utils/type";
+import { LAYOUT } from "../../constants";
 
 // 擴充一個內部專用的繪圖參數介面
 export interface PixelArcProps extends ArcProps {
@@ -22,8 +23,8 @@ export interface PixelArcProps extends ArcProps {
 export const Arc: React.FC<PixelArcProps> = ({
   _svgParams,
   fill = "none",
-  stroke = "#000",
-  strokeWidth = 1.5,
+  stroke = LAYOUT.DEFAULT_COLOR,
+  strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   dash,
   label,
   center,

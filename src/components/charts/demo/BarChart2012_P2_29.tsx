@@ -12,7 +12,12 @@ export const BarChart2012_P2_29: React.FC = () => {
       height={350}
       xAxis={{
         ticks: ["0", "1", "2", "3", "4"],
-        title: "\\text{Number of rings}",
+        title: {
+          text: "\\text{Number of rings}",
+          align: "bottom",
+          offset: 50,
+          rotation: 0,
+        },
         showTickLines: false,
       }}
       yAxis={{

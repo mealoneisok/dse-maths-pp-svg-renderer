@@ -31,6 +31,24 @@ export interface ParsedAxisConfig extends AxisConfig {
   tickValues?: TickValue[];
 }
 
+export interface AxisRenderConfig extends ParsedAxisConfig {
+  start: [number, number];
+  end: [number, number];
+  tickTextPos: string;
+  grid?: GridConfig;
+}
+
 export interface CartesianAxisConfig extends AxisConfig {
   showRotationArrow?: boolean;
+}
+
+export interface CartesianAxisRenderConfig extends CartesianAxisConfig {
+  start: [number, number];
+  end: [number, number];
+  tickValues: TickValue[];
+  extendStart: number;
+  extendEnd: number;
+  tickTextPos: string;
+  grid?: GridConfig;
+  label?: LabelConfig;
 }

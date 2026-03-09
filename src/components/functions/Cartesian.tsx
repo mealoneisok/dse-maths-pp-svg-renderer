@@ -57,7 +57,7 @@ export const Cartesian: React.FC<CartesianProps> = ({
     });
   }, [width, height, padding, showOrigin, originLabel, xAxis, yAxis]);
 
-  const { pt } = layout;
+  const { pt, _xAxis, _yAxis, scaleX, originLabelObj } = layout;
 
   return (
     <svg
@@ -78,7 +78,7 @@ export const Cartesian: React.FC<CartesianProps> = ({
                 ...p,
                 to: pt(p.to[0], p.to[1]),
                 radius: p.radius
-                  ? Math.abs(layout.scaleX(p.radius) - layout.scaleX(0))
+                  ? Math.abs(scaleX(p.radius) - scaleX(0))
                   : undefined,
               }));
 
@@ -94,40 +94,15 @@ export const Cartesian: React.FC<CartesianProps> = ({
             );
           })}
 
-        {/* --- 1. 繪製 X 軸 --- */}
-        <Axis
-          {...xAxis}
-          start={pt(layout.xDomain[0], 0)}
-          end={pt(layout.xDomain[1], 0)}
-          tickValues={layout.xTicks}
-          extendStart={layout.xExtStart}
-          extendEnd={layout.xExtEnd}
-          tickTextPos={xAxis.tickTextPos ?? "bottom"}
-          showRotationArrow={xAxis.showRotationArrow}
-          grid={layout.xGrid}
-          label={layout.xLabel}
-        />
+        {/* --- 1. 繪製 X 軸 (直接展開) --- */}
+        <Axis {..._xAxis} />
 
-        {/* --- 2. 繪製 Y 軸 --- */}
-        <Axis
-          {...yAxis}
-          start={pt(0, layout.yDomain[0])}
-          end={pt(0, layout.yDomain[1])}
-          tickValues={layout.yTicks}
-          extendStart={layout.yExtStart}
-          extendEnd={layout.yExtEnd}
-          tickTextPos={yAxis.tickTextPos ?? "left"}
-          showRotationArrow={yAxis.showRotationArrow}
-          grid={layout.yGrid}
-          label={layout.yLabel}
-        />
+        {/* --- 2. 繪製 Y 軸 (直接展開) --- */}
+        <Axis {..._yAxis} />
 
         {/* --- 3. 原點標記 --- */}
-        {showOrigin && originLabel !== null && layout.originLabelObj && (
-          <Label
-            {...layout.originLabelObj}
-            pos={layout.originLabelObj.pos ?? pt(0, 0)}
-          />
+        {showOrigin && originLabelObj && (
+          <Label {...originLabelObj} pos={originLabelObj.pos ?? pt(0, 0)} />
         )}
 
         {/* --- 4. 繪製函數圖形 --- */}

@@ -4,12 +4,13 @@ import React from "react";
 import { Label } from "./Label";
 import { type PolygonProps } from "./types";
 import { normalizeLabel } from "../../utils/type";
+import { LAYOUT } from "../../constants";
 
 export const Polygon: React.FC<PolygonProps> = ({
   vertices,
   fill = "none",
-  stroke = "#000",
-  strokeWidth = 1.5,
+  stroke = LAYOUT.DEFAULT_COLOR,
+  strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   label,
 }) => {
   const labelObj = normalizeLabel(label);

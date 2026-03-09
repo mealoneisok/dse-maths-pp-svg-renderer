@@ -3,15 +3,36 @@
 import { measureLatex } from "../measure";
 import { createLinearScale, formatTick, generateTicks } from "../ticks";
 import { LAYOUT } from "../../constants";
-import { type CartesianAxisConfig } from "../../components/types";
-import { type LabelConfig, type TickValue } from "../../components/elements";
+import {
+  type CartesianAxisConfig,
+  type CartesianAxisRenderConfig,
+} from "../../components/types";
+import { type LabelConfig } from "../../components/elements";
 import { normalizeGrid, normalizeLabel, normalizePadding } from "../type";
 
+// 統一處理預設值與 Ticks 的生成
+function parseAndNormalizeCartesianAxis(
+  axis: CartesianAxisConfig | undefined,
+  type: "x" | "y",
+) {
+  const domain = axis?.domain || LAYOUT.DEFAULT_AXIS_DOMAIN;
+  const step = axis?.step || LAYOUT.DEFAULT_AXIS_STEP;
+
+  return {
+    ...axis,
+    domain,
+    step,
+    tickValues: generateTicks(domain, step),
+    showNumbers: axis?.showNumbers ?? true,
+    extendStart: axis?.extendStart ?? LAYOUT.DEFAULT_AXIS_EXTEND_START,
+    extendEnd: axis?.extendEnd ?? LAYOUT.DEFAULT_AXIS_EXTEND_END,
+    tickTextPos: axis?.tickTextPos ?? (type === "x" ? "bottom" : "left"),
+  };
+}
+
 export interface CartesianPaddingConfig {
-  xAxis: CartesianAxisConfig;
-  yAxis: CartesianAxisConfig;
-  xTicks: TickValue[];
-  yTicks: TickValue[];
+  xAxis: ReturnType<typeof parseAndNormalizeCartesianAxis>;
+  yAxis: ReturnType<typeof parseAndNormalizeCartesianAxis>;
   basePadding: [number, number, number, number];
   showOrigin: boolean;
   originLabel: LabelConfig | string | null;
@@ -19,7 +40,7 @@ export interface CartesianPaddingConfig {
 
 const getTickSize = (
   val: number | string,
-  axis: CartesianAxisConfig,
+  axis: CartesianPaddingConfig["xAxis"],
   dimension: "width" | "height",
 ) => {
   if (axis.showNumbers === false) return 0;
@@ -28,32 +49,19 @@ const getTickSize = (
 };
 
 const getMaxTickSize = (
-  ticks: TickValue[],
-  axis: CartesianAxisConfig,
+  axis: CartesianPaddingConfig["xAxis"],
   dimension: "width" | "height",
 ) => {
-  if (axis.showNumbers === false || ticks.length === 0) return 0;
-  return ticks.reduce(
+  if (axis.showNumbers === false || axis.tickValues.length === 0) return 0;
+  return axis.tickValues.reduce(
     (max, tick) => Math.max(max, getTickSize(tick.val, axis, dimension)),
     0,
   );
 };
 
-export const getAxisExtends = (
-  xAxis: CartesianAxisConfig,
-  yAxis: CartesianAxisConfig,
-) => ({
-  xExtStart: xAxis.extendStart ?? LAYOUT.DEFAULT_AXIS_EXTEND_START,
-  xExtEnd: xAxis.extendEnd ?? LAYOUT.DEFAULT_AXIS_EXTEND_END,
-  yExtStart: yAxis.extendStart ?? LAYOUT.DEFAULT_AXIS_EXTEND_START,
-  yExtEnd: yAxis.extendEnd ?? LAYOUT.DEFAULT_AXIS_EXTEND_END,
-});
-
 export function getPadding({
   xAxis,
   yAxis,
-  xTicks,
-  yTicks,
   basePadding,
   showOrigin = true,
   originLabel = LAYOUT.DEFAULT_CARTESIAN_ORIGIN_LABEL_TEXT,
@@ -63,11 +71,6 @@ export function getPadding({
     pr = padRight,
     pb = padBottom,
     pl = padLeft;
-
-  const { xExtStart, xExtEnd, yExtStart, yExtEnd } = getAxisExtends(
-    xAxis,
-    yAxis,
-  );
 
   let originLeftSpace = 0;
   let originBottomSpace = 0;
@@ -82,42 +85,50 @@ export function getPadding({
     originBottomSpace = align.includes("bottom") ? height + offset : height / 2;
   }
 
-  // 🟢 取得定義域，用來判斷軸線是否貼著邊界
-  const xD = xAxis.domain || LAYOUT.DEFAULT_AXIS_DOMAIN;
-  const yD = yAxis.domain || LAYOUT.DEFAULT_AXIS_DOMAIN;
-
   pl += Math.max(
-    xExtStart,
-    xTicks.length > 0 ? getTickSize(xTicks[0].val, xAxis, "width") / 2 : 0,
-    xD[0] >= 0
-      ? Math.max(getMaxTickSize(yTicks, yAxis, "width"), originLeftSpace)
+    xAxis.extendStart,
+    xAxis.tickValues.length > 0
+      ? getTickSize(xAxis.tickValues[0].val, xAxis, "width") / 2
+      : 0,
+    xAxis.domain[0] >= 0
+      ? Math.max(getMaxTickSize(yAxis, "width"), originLeftSpace)
       : 0,
   );
 
   pb += Math.max(
-    yExtStart,
-    yTicks.length > 0 ? getTickSize(yTicks[0].val, yAxis, "height") / 2 : 0,
-    yD[0] >= 0
-      ? Math.max(getMaxTickSize(xTicks, xAxis, "height"), originBottomSpace)
+    yAxis.extendStart,
+    yAxis.tickValues.length > 0
+      ? getTickSize(yAxis.tickValues[0].val, yAxis, "height") / 2
+      : 0,
+    yAxis.domain[0] >= 0
+      ? Math.max(getMaxTickSize(xAxis, "height"), originBottomSpace)
       : 0,
   );
 
   pr += Math.max(
-    xExtEnd +
+    xAxis.extendEnd +
       measureLatex((normalizeLabel(xAxis.label) || {}).text || "x").width / 2,
-    xTicks.length > 0
-      ? getTickSize(xTicks[xTicks.length - 1].val, xAxis, "width") / 2
+    xAxis.tickValues.length > 0
+      ? getTickSize(
+          xAxis.tickValues[xAxis.tickValues.length - 1].val,
+          xAxis,
+          "width",
+        ) / 2
       : 0,
-    xD[1] <= 0 ? getMaxTickSize(yTicks, yAxis, "width") : 0,
+    xAxis.domain[1] <= 0 ? getMaxTickSize(yAxis, "width") : 0,
   );
 
   pt += Math.max(
-    yExtEnd +
+    yAxis.extendEnd +
       measureLatex((normalizeLabel(yAxis.label) || {}).text || "y").height / 2,
-    yTicks.length > 0
-      ? getTickSize(yTicks[yTicks.length - 1].val, yAxis, "height") / 2
+    yAxis.tickValues.length > 0
+      ? getTickSize(
+          yAxis.tickValues[yAxis.tickValues.length - 1].val,
+          yAxis,
+          "height",
+        ) / 2
       : 0,
-    yD[1] <= 0 ? getMaxTickSize(xTicks, xAxis, "height") : 0,
+    yAxis.domain[1] <= 0 ? getMaxTickSize(xAxis, "height") : 0,
   );
 
   return { top: pt, right: pr, bottom: pb, left: pl };
@@ -142,50 +153,41 @@ export function calculateLayout({
   xAxis,
   yAxis,
 }: CartesianLayoutProps) {
-  const xDomain = xAxis.domain || LAYOUT.DEFAULT_AXIS_DOMAIN;
-  const yDomain = yAxis.domain || LAYOUT.DEFAULT_AXIS_DOMAIN;
-  const xStep = xAxis.step || LAYOUT.DEFAULT_AXIS_STEP;
-  const yStep = yAxis.step || LAYOUT.DEFAULT_AXIS_STEP;
+  // 1. 提早正規化
+  const normX = parseAndNormalizeCartesianAxis(xAxis, "x");
+  const normY = parseAndNormalizeCartesianAxis(yAxis, "y");
 
-  const xTicks = generateTicks(xDomain, xStep);
-  const yTicks = generateTicks(yDomain, yStep);
+  // 2. 計算 Padding
   const dynamicPadding = getPadding({
-    xAxis,
-    yAxis,
-    xTicks,
-    yTicks,
+    xAxis: normX,
+    yAxis: normY,
     basePadding: normalizePadding(padding),
     showOrigin,
     originLabel,
   });
 
-  // 3 & 4. 比例尺與原點 (保留不變)
+  // 3. 比例尺與 pt 函數
   const scaleX = createLinearScale(
-    xDomain[0],
-    xDomain[1],
+    normX.domain[0],
+    normX.domain[1],
     dynamicPadding.left,
     width - dynamicPadding.right,
   );
   const scaleY = createLinearScale(
-    yDomain[0],
-    yDomain[1],
+    normY.domain[0],
+    normY.domain[1],
     height - dynamicPadding.bottom,
     dynamicPadding.top,
   );
   const pt = (x: number, y: number): [number, number] => [scaleX(x), scaleY(y)];
+
   const originLabelObj = normalizeLabel(originLabel, {
     align: LAYOUT.DEFAULT_CARTESIAN_ORIGIN_LABEL_ALIGN,
     offset: LAYOUT.DEFAULT_CARTESIAN_ORIGIN_LABEL_OFFSET,
     pos: pt(0, 0),
   });
 
-  // 5. 處理軸線延伸與網格 (Grid)
-  const { xExtStart, xExtEnd, yExtStart, yExtEnd } = getAxisExtends(
-    xAxis,
-    yAxis,
-  );
-
-  // 建立 Grid 的小工具，減少冗長設定
+  // 4. Grid 計算
   const getDefaultGrid = (negLen: number, posLen: number) => ({
     length: [negLen, posLen] as [number, number],
     direction: "both" as const,
@@ -194,48 +196,47 @@ export function calculateLayout({
   });
 
   const xGrid = normalizeGrid(
-    xAxis.grid,
+    normX.grid,
     getDefaultGrid(
-      scaleY(0) - (scaleY(yDomain[1]) - yExtEnd),
-      scaleY(yDomain[0]) + yExtStart - scaleY(0),
-    ),
-  );
-  const yGrid = normalizeGrid(
-    yAxis.grid,
-    getDefaultGrid(
-      scaleX(0) - (scaleX(xDomain[0]) - xExtStart),
-      scaleX(xDomain[1]) + xExtEnd - scaleX(0),
+      scaleY(0) - (scaleY(normY.domain[1]) - normY.extendEnd),
+      scaleY(normY.domain[0]) + normY.extendStart - scaleY(0),
     ),
   );
 
-  // 6. 處理軸線標籤 (Axis Label)
-  const xLabel = normalizeLabel(xAxis.label, {
-    align: "bottom",
-    offset: 8,
-    text: "x",
-  });
-  const yLabel = normalizeLabel(yAxis.label, {
-    align: "left",
-    offset: 8,
-    text: "y",
-  });
+  const yGrid = normalizeGrid(
+    normY.grid,
+    getDefaultGrid(
+      scaleX(0) - (scaleX(normX.domain[0]) - normX.extendStart),
+      scaleX(normX.domain[1]) + normX.extendEnd - scaleX(0),
+    ),
+  );
+
+  const _xAxis: CartesianAxisRenderConfig = {
+    ...normX,
+    start: pt(normX.domain[0], 0),
+    end: pt(normX.domain[1], 0),
+    grid: xGrid,
+    label: normalizeLabel(normX.label, {
+      align: "bottom",
+      offset: 8,
+      text: "x",
+    }),
+  };
+
+  const _yAxis: CartesianAxisRenderConfig = {
+    ...normY,
+    start: pt(0, normY.domain[0]),
+    end: pt(0, normY.domain[1]),
+    grid: yGrid,
+    label: normalizeLabel(normY.label, { align: "left", offset: 8, text: "y" }),
+  };
 
   return {
-    xDomain,
-    yDomain,
-    xTicks,
-    yTicks,
+    _xAxis,
+    _yAxis,
     scaleX,
     scaleY,
     pt,
     originLabelObj,
-    xExtStart,
-    xExtEnd,
-    yExtStart,
-    yExtEnd,
-    xGrid,
-    yGrid,
-    xLabel,
-    yLabel,
   };
 }

@@ -8,7 +8,6 @@ import {
   calculateLayout,
   type ChartLayoutResult,
 } from "../../utils/layout/chartFrame";
-import { normalizeAxis, normalizeLabel } from "../../utils/type";
 
 interface ChartFrameProps {
   width: number;
@@ -53,42 +52,11 @@ export const ChartFrame: React.FC<ChartFrameProps> = ({
     [width, height, xAxis, yAxis, title, titleGap, padding, borders],
   );
 
-  const {
-    _xAxis,
-    _yAxis,
-    startX,
-    endX,
-    startY,
-    endY,
-    xExtend,
-    yExtend,
-    xMetrics,
-    yMetrics,
-  } = layout;
+  const { _xAxis, _yAxis, startX, endX, startY, endY, xExtend, yExtend } =
+    layout;
 
-  // 定義渲染開關
   const showYAxis = borders?.left ?? true;
   const showXAxis = borders?.bottom ?? true;
-  const xAxisCfg = normalizeAxis(_xAxis, {
-    tickLineAlign: 0,
-  });
-  const yAxisCfg = normalizeAxis(_yAxis, {
-    tickLineAlign: 0,
-  });
-  const xTitle = _xAxis.title
-    ? normalizeLabel(_xAxis.title, {
-        align: "bottom",
-        offset: xMetrics.titleOffset,
-      })
-    : undefined;
-
-  const yTitle = _yAxis.title
-    ? normalizeLabel(_yAxis.title, {
-        align: "top",
-        offset: yMetrics.titleOffset,
-        rotation: -90,
-      })
-    : undefined;
 
   return (
     <svg
@@ -97,7 +65,7 @@ export const ChartFrame: React.FC<ChartFrameProps> = ({
       height={height}
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* 繪製主標題：還原正確的錨點與往上推 (top) */}
+      {/* 繪製主標題 */}
       {title && (
         <Label
           pos={[width / 2, endY - yExtend]}
@@ -107,55 +75,13 @@ export const ChartFrame: React.FC<ChartFrameProps> = ({
         />
       )}
 
-      {/* 繪製 Y 軸 (受 borders.left 控制) */}
-      {showYAxis && (
-        <Axis
-          {...yAxisCfg}
-          title={yTitle}
-          start={[startX, startY]}
-          end={[startX, endY]}
-          extendStart={0}
-          extendEnd={yExtend}
-          tickTextPos="left"
-          skipZero={false}
-          grid={
-            _yAxis.grid
-              ? {
-                  length: endX - startX,
-                  direction: "positive",
-                  skipZero: false,
-                  color: "#e0e0e0",
-                  dash: "dotted",
-                  ...(typeof _yAxis.grid === "object" ? _yAxis.grid : {}),
-                }
-              : null
-          }
-        />
-      )}
+      {/* 繪製 Y 軸 */}
+      {showYAxis && <Axis {..._yAxis} />}
 
-      {/* 繪製 X 軸 (受 borders.bottom 控制) */}
+      {/* 繪製 X 軸 */}
       {showXAxis && (
         <Axis
-          {...xAxisCfg}
-          title={xTitle}
-          start={[startX, startY]}
-          end={[endX, startY]}
-          extendStart={0}
-          extendEnd={xExtend}
-          tickTextPos="bottom"
-          skipZero={false}
-          grid={
-            _xAxis.grid
-              ? {
-                  length: startY - endY, // 自動計算畫布內部的高度
-                  direction: "negative", // X 軸法向量朝下，要往上畫入畫布需設為 negative
-                  skipZero: false,
-                  color: "#e0e0e0",
-                  dash: "dotted",
-                  ...(typeof _xAxis.grid === "object" ? _xAxis.grid : {}),
-                }
-              : null
-          }
+          {..._xAxis} // 直接展開已正規化的 _xAxis
         />
       )}
 

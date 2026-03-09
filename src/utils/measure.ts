@@ -9,7 +9,7 @@ export interface MeasureResult {
   height: number;
 }
 
-// 🌟 1. 設置估算模式專用的常數變數 (可以依照字型隨時微調)
+// 設置估算模式專用的常數變數
 const ESTIMATION_CONFIG = {
   MAX_LENGTH: 10, // 允許估算的最大字串長度
   WIDTH_NARROW: 0.3, // 窄字元權重 (如 i, j, l, 1, 標點, 空白)
@@ -19,12 +19,13 @@ const ESTIMATION_CONFIG = {
   HEIGHT_BASE: 1.1, // 基礎高度比例
   HEIGHT_DESCENDER: 0.25, // 下行字母額外高度比例 (如 g, j, p, q, y)
   WIDTH_SAFETY_MARGIN: 1.05, // 寬度安全容錯比例 (預設加寬 5%)
+  WIDTH_CJK: 1.0,
 };
 
 const measureCache = new Map<string, MeasureResult>();
 let measureNode: HTMLElement | null = null;
 
-// 🌟 2. 將估算邏輯抽離成獨立的函式
+// 將估算邏輯抽離成獨立的函式
 function estimateTextSize(
   text: string,
   fontSize: number,
@@ -46,7 +47,12 @@ function estimateTextSize(
 
   // 根據字元特徵給予對應的寬度權重
   for (const char of strippedText) {
-    if (/[ijlI1., ]/.test(char)) {
+    if (/[\u4e00-\u9fa5\u3000-\u303f\uff00-\uffef]/.test(char)) {
+      // 涵蓋漢字、全形標點符號
+      estimatedWidth += fontSize * ESTIMATION_CONFIG.WIDTH_CJK;
+    } else if (/[ijlI1., ]/.test(char)) {
+      estimatedWidth += fontSize * ESTIMATION_CONFIG.WIDTH_NARROW;
+    } else if (/[ijlI1., ]/.test(char)) {
       estimatedWidth += fontSize * ESTIMATION_CONFIG.WIDTH_NARROW;
     } else if (/[A-Z]/.test(char) || char === "-" || char === "+") {
       estimatedWidth += fontSize * ESTIMATION_CONFIG.WIDTH_WIDE;
