@@ -3,22 +3,26 @@
 import React from "react";
 import type { ConeFrustumProps } from "../types";
 import { LAYOUT, PROJ_ELLIPSE_RATIO } from "@/constants";
-import { normalizeDash } from "@/utils/type";
+import { normalizeDash, normalizeFill } from "@/utils/type";
+import { PatternFill } from "../PatternFill";
 
 export const ConeFrustum: React.FC<ConeFrustumProps> = ({
   centerBase,
   radiusBottom,
   radiusTop,
   height,
-  color = "#111827",
+  color = LAYOUT.DEFAULT_COLOR,
+  fill = "none",
   strokeWidth = LAYOUT.DEFAULT_STROKE_WIDTH,
   project,
   scale = 20,
-  dash = "dashed",
+  dash = "dashed", // 這是控制預設被遮擋的「底部後半」
+  topDash,
+  sideDash,
+  bottomFrontDash,
 }) => {
   if (!project) return null;
 
-  // 1. 計算上下底面中心在 2D 畫面的位置
   const [cx1, cy1] = project(centerBase);
   const [cx2, cy2] = project([
     centerBase[0],
@@ -26,16 +30,39 @@ export const ConeFrustum: React.FC<ConeFrustumProps> = ({
     centerBase[2] + height,
   ]);
 
-  // 2. 計算橢圓的長短軸 (利用與 Sphere 一樣的 0.3 深度視角比例)
   const rx1 = radiusBottom * scale;
   const ry1 = rx1 * PROJ_ELLIPSE_RATIO;
-
   const rx2 = radiusTop * scale;
   const ry2 = rx2 * PROJ_ELLIPSE_RATIO;
 
+  const { fillValue, patternDef } = normalizeFill(fill);
+
   return (
     <g>
-      {/* 底部橢圓 (後半部被遮蔽：虛線) */}
+      {patternDef && (
+        <defs>
+          <PatternFill {...patternDef} />
+        </defs>
+      )}
+
+      {/* 1. 填色層 (Fills) */}
+      {fill !== "none" && fillValue !== "transparent" && (
+        <g stroke="none" fill={fillValue}>
+          <ellipse cx={cx1} cy={cy1} rx={rx1} ry={ry1} />
+          <path
+            d={`M ${cx1 - rx1} ${cy1} 
+                L ${cx2 - rx2} ${cy2} 
+                A ${rx2} ${ry2} 0 0 0 ${cx2 + rx2} ${cy2} 
+                L ${cx1 + rx1} ${cy1} 
+                A ${rx1} ${ry1} 0 0 1 ${cx1 - rx1} ${cy1} Z`}
+          />
+          <ellipse cx={cx2} cy={cy2} rx={rx2} ry={ry2} />
+        </g>
+      )}
+
+      {/* 🌟 2. 線框層 (Strokes) - 套用新的 Dash 參數 */}
+
+      {/* A. 底部橢圓 (後半部被遮蔽：吃原本的 dash 參數) */}
       <path
         d={`M ${cx1 - rx1} ${cy1} A ${rx1} ${ry1} 0 0 1 ${cx1 + rx1} ${cy1}`}
         fill="none"
@@ -43,15 +70,15 @@ export const ConeFrustum: React.FC<ConeFrustumProps> = ({
         strokeWidth={strokeWidth}
         strokeDasharray={normalizeDash(dash)}
       />
-      {/* 底部橢圓 (前半部可見：實線) */}
+      {/* B. 底部橢圓 (前半部可見：吃 bottomFrontDash，預設實線) */}
       <path
         d={`M ${cx1 - rx1} ${cy1} A ${rx1} ${ry1} 0 0 0 ${cx1 + rx1} ${cy1}`}
         fill="none"
         stroke={color}
         strokeWidth={strokeWidth}
+        strokeDasharray={normalizeDash(bottomFrontDash)}
       />
-
-      {/* 頂部橢圓 (完全可見：實線) */}
+      {/* C. 頂部橢圓 (吃 topDash，預設實線) */}
       <ellipse
         cx={cx2}
         cy={cy2}
@@ -60,9 +87,9 @@ export const ConeFrustum: React.FC<ConeFrustumProps> = ({
         fill="none"
         stroke={color}
         strokeWidth={strokeWidth}
+        strokeDasharray={normalizeDash(topDash)}
       />
-
-      {/* 左母線 */}
+      {/* D. 左母線 (吃 sideDash) */}
       <line
         x1={cx1 - rx1}
         y1={cy1}
@@ -70,8 +97,9 @@ export const ConeFrustum: React.FC<ConeFrustumProps> = ({
         y2={cy2}
         stroke={color}
         strokeWidth={strokeWidth}
+        strokeDasharray={normalizeDash(sideDash)}
       />
-      {/* 右母線 */}
+      {/* E. 右母線 (吃 sideDash) */}
       <line
         x1={cx1 + rx1}
         y1={cy1}
@@ -79,6 +107,7 @@ export const ConeFrustum: React.FC<ConeFrustumProps> = ({
         y2={cy2}
         stroke={color}
         strokeWidth={strokeWidth}
+        strokeDasharray={normalizeDash(sideDash)}
       />
     </g>
   );

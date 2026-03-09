@@ -1,6 +1,7 @@
 // src/components/geometry/demo/Pyramid2012_P1_18.tsx
 
-import { GeometryFrame3D, type Vector3 } from "../GeometryFrame3D";
+import { GeometryFrame3D } from "../GeometryFrame3D";
+import { type Vector3 } from "@/components/elements";
 
 export const Pyramid2012_P1_18 = () => {
   const L = 20;

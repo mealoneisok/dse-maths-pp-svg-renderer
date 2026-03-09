@@ -15,7 +15,7 @@ export const VIEW_VECTOR: Vector3 = [
 export const PROJ_ELLIPSE_RATIO = PROJ_DEPTH_SCALE * Math.sin(PROJ_ANGLE);
 
 export const LAYOUT = {
-  DEFAULT_COLOR: "black",
+  DEFAULT_COLOR: "#111827",
   DEFAULT_BACKGROUND: "white",
   DEFAULT_FONT_SIZE: 16, // px
   DEFAULT_STROKE_WIDTH: 1.5,

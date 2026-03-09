@@ -156,18 +156,18 @@ export const PyramidWith2DElements = () => {
         solids={[
           {
             type: "lofted",
-            // 底面頂點 (依序：A, B, C, D)
             baseVertices: [
-              [0, 0], // A
-              [L, 0], // B
-              [L, L], // C
-              [0, L], // D
+              [0, 0],
+              [L, 0],
+              [L, L],
+              [0, L],
             ],
             height: h,
-            topScale: 0, // 0 代表縮成一點，形成金字塔
-            shift: [L / 2, L / 2], // 頂點偏移至中心
+            topScale: 0,
+            shift: [L / 2, L / 2],
             color: "#111827",
-            dash: "dashed", // 自動算出的被遮蔽線條會變成虛線
+            fill: "rgba(253, 224, 71, 0.4)", // 例如：半透明的黃色
+            dash: "dashed",
           },
         ]}
         regions={[

@@ -61,7 +61,7 @@ export interface ArcProps {
 
 export interface PolygonProps {
   vertices: Vector2[] | Vector3[];
-  fill?: string;
+  fill?: string | PatternFillConfig;
   stroke?: string;
   strokeWidth?: number;
   label?: LabelConfig | string | null;
@@ -70,7 +70,7 @@ export interface PolygonProps {
 export interface CircleProps {
   center: Vector2;
   radius: number;
-  fill?: string;
+  fill?: string | PatternFillConfig;
   stroke?: string;
   strokeWidth?: number;
   dash?: string;
@@ -150,10 +150,12 @@ export interface LoftedSolidProps {
   topScale?: number;
   shift?: Vector2;
   color?: string;
+  fill?: string | PatternFillConfig;
   strokeWidth?: number;
   project?: ProjectFunctionType;
   viewVector?: Vector3;
   dash?: string;
+  frontDash?: string; // 控制朝向鏡頭的「可見邊緣」虛線樣式
 }
 
 export interface PolyhedronProps {
@@ -161,9 +163,11 @@ export interface PolyhedronProps {
   faces: number[][]; // 頂點 index 陣列，順序必須從面的外部看是「逆時針 (CCW)」
   strokeWidth?: number;
   color?: string;
+  fill?: string | PatternFillConfig;
   project?: ProjectFunctionType;
   viewVector?: Vector3;
   dash?: string;
+  frontDash?: string; // 控制朝向鏡頭的「可見邊緣」虛線樣式
 }
 
 export interface SphereProps {
@@ -171,6 +175,7 @@ export interface SphereProps {
   radius: number; // 3D 空間中的半徑
   strokeWidth?: number;
   color?: string;
+  fill?: string | PatternFillConfig;
   project?: ProjectFunctionType;
   scale?: number;
   dash?: string;
@@ -181,6 +186,7 @@ export interface HemisphereProps {
   radius: number; // 3D 空間中的半徑
   strokeWidth?: number;
   color?: string;
+  fill?: string | PatternFillConfig;
   project?: ProjectFunctionType;
   scale?: number;
   dash?: string;
@@ -193,9 +199,13 @@ export interface ConeFrustumProps {
   height: number;
   strokeWidth?: number;
   color?: string;
+  fill?: string | PatternFillConfig;
   project?: ProjectFunctionType;
   scale?: number;
   dash?: string;
+  topDash?: string; // 控制頂部整個橢圓
+  sideDash?: string; // 控制左右兩側的母線
+  bottomFrontDash?: string; // 控制底部前半(原本是實線的那一半)
 }
 
 export type ProjectFunctionType = (pt: Vector2 | Vector3) => Vector2;
