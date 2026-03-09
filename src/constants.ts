@@ -1,8 +1,17 @@
 // src/constants.ts
 
-import type { Vector2 } from "./components/elements";
+import type { Vector2, Vector3 } from "./components/elements";
 
 export const EPSILON = 1e-6;
+
+// 斜視投影參數
+export const PROJ_ANGLE = Math.PI / 6;
+export const PROJ_DEPTH_SCALE = 0.6;
+export const VIEW_VECTOR: Vector3 = [
+  PROJ_DEPTH_SCALE * Math.cos(PROJ_ANGLE),
+  -1,
+  PROJ_DEPTH_SCALE * Math.sin(PROJ_ANGLE),
+];
 
 export const LAYOUT = {
   DEFAULT_COLOR: "black",

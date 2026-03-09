@@ -12,13 +12,10 @@ import type {
   RegionPathProps,
   LabelConfig,
 } from "../../components/elements";
-import type {
-  AngleMarker3DProps,
-  Vector2,
-  Vector3,
-} from "../../components/elements";
+import type { AngleMarkerProps, Vector3 } from "../../components/elements";
+import { projectMath } from "../math";
 
-export interface Geometry3DLayoutConfig {
+interface Geometry3DLayoutConfig {
   width: number;
   height?: number;
   padding: number | [number, number, number, number];
@@ -26,25 +23,12 @@ export interface Geometry3DLayoutConfig {
     points?: Point3DProps[];
     segments?: Segment3DProps[];
     solids?: SolidDef[];
-    angleMarkers?: Omit<AngleMarker3DProps, "project">[];
+    angleMarkers?: Omit<AngleMarkerProps, "project">[];
     polygons?: PolygonProps[];
     regions?: RegionProps[];
     dimLines?: DimLineProps[];
   };
 }
-
-// 核心：斜視投影參數 (需與 Frame 內保持一致)
-const PROJ_ANGLE = Math.PI / 6;
-const PROJ_DEPTH_SCALE = 0.6;
-
-// 第一階段：無縮放、無原點偏移的純數學 2D 投影
-export const projectMath = (pt: Vector3): Vector2 => {
-  const [x, y, z] = pt;
-  return [
-    x + y * PROJ_DEPTH_SCALE * Math.cos(PROJ_ANGLE),
-    -z - y * PROJ_DEPTH_SCALE * Math.sin(PROJ_ANGLE), // SVG 的 Y 軸向下
-  ];
-};
 
 export const computeBoundingBox3D = (
   elements: Geometry3DLayoutConfig["elements"],
@@ -70,12 +54,11 @@ export const computeBoundingBox3D = (
     addPoint3D(s.end);
   });
   elements.angleMarkers?.forEach((am) => {
-    addPoint3D(am.vertex);
-    addPoint3D(am.p1);
-    addPoint3D(am.p2);
+    addPoint3D(am.vertex as Vector3);
+    addPoint3D(am.p1 as Vector3);
+    addPoint3D(am.p2 as Vector3);
   });
 
-  // 🌟 1.5 處理新的 2D 圖形轉換
   elements.polygons?.forEach((p) =>
     p.vertices.forEach((v) => addPoint3D(v as Vector3)),
   );
@@ -125,7 +108,7 @@ export const computeBoundingBox3D = (
       }
       case "coneFrustum": {
         const bottom2D = projectMath(solid.centerBase);
-        // 🌟 修正點：底面橢圓的 Y 軸極值需乘上 0.3 透視常數
+        // 底面橢圓的 Y 軸極值需乘上 0.3 透視常數
         addMathPoint([
           bottom2D[0] - solid.radiusBottom,
           bottom2D[1] - solid.radiusBottom * 0.3,
@@ -141,7 +124,7 @@ export const computeBoundingBox3D = (
           solid.centerBase[2] + solid.height,
         ];
         const top2D = projectMath(top3D);
-        // 🌟 修正點：頂面橢圓的 Y 軸極值需乘上 0.3 透視常數
+        // 頂面橢圓的 Y 軸極值需乘上 0.3 透視常數
         addMathPoint([
           top2D[0] - solid.radiusTop,
           top2D[1] - solid.radiusTop * 0.3,
@@ -195,7 +178,7 @@ export function calculateLayout3D({
   const drawW = width - basePadding[1] - basePadding[3];
   const drawH = prelimHeight - basePadding[0] - basePadding[2];
 
-  // 🌟 3D 最關鍵：必須取 Uniform Scale (X, Y 共用同一個縮放比例)
+  // 必須取 Uniform Scale (X, Y 共用同一個縮放比例)
   const scale = Math.min(drawW / mathW, drawH / mathH);
 
   // --- 標籤溢出預測 (Label Overflow Check) ---
@@ -204,7 +187,7 @@ export function calculateLayout3D({
     overflowBot = 0,
     overflowLeft = 0;
 
-  const checkLabel = (pt3d: Vector3, lbl?: LabelConfig) => {
+  const checkLabelOverflow = (pt3d: Vector3, lbl?: LabelConfig) => {
     // lbl 已經在元件層被 normalize，如果有值就一定包含預設的 offset 與 align
     if (!lbl || (!lbl.text && lbl.text !== 0)) return;
 
@@ -214,7 +197,6 @@ export function calculateLayout3D({
 
     const { width: boxW, height: boxH } = measureLatex(lbl.text);
 
-    // 🌟 不用再寫 fallback 了，直接拿！
     const offset = lbl.offset;
     const align = lbl.align;
 
@@ -254,9 +236,11 @@ export function calculateLayout3D({
       );
   };
 
-  elements.points?.forEach((p) => checkLabel(p.pos, p.label as LabelConfig));
+  elements.points?.forEach((p) =>
+    checkLabelOverflow(p.pos, p.label as LabelConfig),
+  );
   elements.angleMarkers?.forEach((am) =>
-    checkLabel(am.vertex, am.label as LabelConfig),
+    checkLabelOverflow(am.vertex as Vector3, am.label as LabelConfig),
   );
 
   // 計算最終的畫布與 Origin
