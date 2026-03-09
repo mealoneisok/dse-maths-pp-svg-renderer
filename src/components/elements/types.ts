@@ -78,9 +78,9 @@ export interface CircleProps {
 }
 
 export interface AngleMarkerProps {
-  vertex: Vector2;
-  p1: Vector2;
-  p2: Vector2;
+  vertex: Vector2 | Vector3;
+  p1: Vector2 | Vector3;
+  p2: Vector2 | Vector3;
   size?: number;
   color?: string;
   strokeWidth?: number;

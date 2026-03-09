@@ -12,17 +12,17 @@ import {
   Polygon,
   Region,
   DimLine,
+  AngleMarker,
   type Point3DProps,
   type Segment3DProps,
   type SolidDef,
-  type AngleMarker3DProps,
+  type AngleMarkerProps,
   type Vector2,
   type Vector3,
   type PolygonProps,
   type RegionProps,
   type DimLineProps,
 } from "../elements";
-import { AngleMarker3D } from "../elements/3D/AngleMarker3D";
 import { calculateLayout3D } from "../../utils/layout/geometryFrame3D";
 import { normalizeLabel } from "@/utils/type";
 import { LAYOUT } from "@/constants";
@@ -34,7 +34,7 @@ interface GeometryFrame3DProps {
   points?: Point3DProps[];
   segments?: Segment3DProps[];
   solids?: SolidDef[];
-  angleMarkers?: Omit<AngleMarker3DProps, "project">[];
+  angleMarkers?: Omit<AngleMarkerProps, "project">[];
   polygons?: PolygonProps[];
   regions?: RegionProps[];
   dimLines?: DimLineProps[];
@@ -226,7 +226,7 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
 
       {/* 渲染 Angle Markers */}
       {angleMarkers.map((marker, idx) => (
-        <AngleMarker3D key={`angle3d-${idx}`} {...marker} project={project} />
+        <AngleMarker key={`angle3d-${idx}`} {...marker} project={project} />
       ))}
 
       {/* 渲染 Points */}

@@ -19,5 +19,4 @@ export * from "./3D/LoftedSolid";
 export * from "./3D/Polyhedron";
 export * from "./3D/Sphere";
 export * from "./3D/ConeFrustum";
-export * from "./3D/AngleMarker3D";
 export * from "./3D/Hemisphere";
