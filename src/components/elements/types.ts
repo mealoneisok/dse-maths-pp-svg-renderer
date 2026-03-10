@@ -14,7 +14,7 @@ export interface LabelConfig {
 }
 
 export interface PointProps {
-  pos: Vector2; // 實體像素座標 [x, y]
+  pos: Vector2 | Vector3; // 實體像素座標 [x, y] 或 [x, y, z]
   type?: "circle" | "cross" | "none";
   showMarker?: boolean;
   markerSize?: number;
@@ -130,6 +130,7 @@ export interface DimLineProps extends Omit<SegmentProps, "start" | "end"> {
   extEnd?: number | Vector2 | Vector3; // 終點的垂直延伸線長度
   extDash?: string; // 延伸線的虛線樣式
   rotation?: number; // 標籤旋轉角度 (degrees)
+  breakLine?: boolean; // 是否在中間斷開
 }
 
 export interface GridConfig {
@@ -146,7 +147,14 @@ export interface TickValue {
   isZero: boolean;
 }
 
-export interface LoftedSolidProps {
+export interface BaseSolidProps {
+  id?: string; // 給物件一個名字 (引擎會自動用它生成 Mask)
+  occludedBy?: string[]; // 陣列：填入遮擋這個物件的其他物件 ID
+  zSplit?: number; // 截斷平面的 Z 座標 (例如水面或碗口)
+  zSplitDash?: string; // 截斷面以下的虛線樣式 (預設 "dashed")
+}
+
+export interface LoftedSolidProps extends BaseSolidProps {
   baseVertices: Vector2[]; // CCW order expected
   height: number;
   topScale?: number;
@@ -160,7 +168,7 @@ export interface LoftedSolidProps {
   frontDash?: string; // 控制朝向鏡頭的「可見邊緣」虛線樣式
 }
 
-export interface PolyhedronProps {
+export interface PolyhedronProps extends BaseSolidProps {
   vertices: Vector3[];
   faces: number[][]; // 頂點 index 陣列，順序必須從面的外部看是「逆時針 (CCW)」
   strokeWidth?: number;
@@ -172,7 +180,7 @@ export interface PolyhedronProps {
   frontDash?: string; // 控制朝向鏡頭的「可見邊緣」虛線樣式
 }
 
-export interface SphereProps {
+export interface SphereProps extends BaseSolidProps {
   center: Vector3;
   radius: number; // 3D 空間中的半徑
   strokeWidth?: number;
@@ -183,7 +191,7 @@ export interface SphereProps {
   dash?: string;
 }
 
-export interface HemisphereProps {
+export interface HemisphereProps extends BaseSolidProps {
   centerBase: Vector3;
   radius: number; // 3D 空間中的半徑
   strokeWidth?: number;
@@ -192,9 +200,10 @@ export interface HemisphereProps {
   project?: ProjectFunctionType;
   scale?: number;
   dash?: string;
+  inverted?: boolean; // 控制半球是「圓頂(false)」還是「碗狀(true)」
 }
 
-export interface ConeFrustumProps {
+export interface ConeFrustumProps extends BaseSolidProps {
   centerBase: Vector3;
   radiusBottom: number;
   radiusTop: number;

@@ -39,6 +39,7 @@ interface GeometryFrame3DProps {
   polygons?: PolygonProps[];
   regions?: RegionProps[];
   dimLines?: DimLineProps[];
+  renderDefs?: (project: (pt: Vector3 | Vector2) => Vector2) => React.ReactNode;
 }
 
 export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
@@ -52,6 +53,7 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
   polygons = [],
   regions = [],
   dimLines = [],
+  renderDefs,
 }) => {
   const processedPoints = useMemo(() => {
     return points.map((pt) => {
@@ -117,6 +119,9 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
       height={layout.finalHeight}
       className="bg-white shadow-md transition-all duration-100 ease-out"
     >
+      {/* 渲染自定義的 SVG 定義 (如 Mask, Gradient) */}
+      {renderDefs && renderDefs(project)}
+
       {/* 渲染 3D 投影陰影 (Region) */}
       {regions
         .filter((r) => r?.start && r?.paths)
@@ -196,10 +201,9 @@ export const GeometryFrame3D: React.FC<GeometryFrame3DProps> = ({
       {segments.map((seg, idx) => (
         <Segment
           key={`seg3d-${idx}`}
+          {...seg}
           start={project(seg.start)}
           end={project(seg.end)}
-          color={seg.color}
-          dash={seg.dash}
         />
       ))}
 

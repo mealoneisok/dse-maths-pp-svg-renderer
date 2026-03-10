@@ -12,3 +12,5 @@ export * from "./demo/InscribedSphere";
 export * from "./demo/PrismPractice_P2_39";
 export * from "./demo/PyramidWith2DElements";
 export * from "./demo/FrustumWithWater2012_6";
+export * from "./demo/CircularCone2014_p1_14";
+export * from "./demo/CircularCone2012_p1_12";

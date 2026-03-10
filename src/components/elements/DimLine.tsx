@@ -14,7 +14,7 @@ import {
 } from "./types";
 
 export const DimLine: React.FC<
-  DimLineProps & { project?: ProjectFunctionType }
+  DimLineProps & { project?: ProjectFunctionType; breakLine?: boolean }
 > = ({
   start,
   end,
@@ -28,6 +28,7 @@ export const DimLine: React.FC<
   extEnd = 0,
   extDash = "dashed",
   rotation = 0,
+  breakLine = false,
   project,
 }) => {
   const pxStart = project ? project(start) : (start as Vector2);
@@ -47,13 +48,12 @@ export const DimLine: React.FC<
   const extDashArray = normalizeDash(extDash);
 
   const renderExtensions = () => {
-    const perpAngle = angle + Math.PI / 2; // 用於 2D fallback 的垂直角度
+    const perpAngle = angle + Math.PI / 2;
     return (
       <g>
         {extStart !== undefined && extStart !== 0 && (
           <Segment
             start={pxStart}
-            // 判斷：如果是座標陣列，就將目標點投影；否則走原本的 2D 垂直線邏輯
             end={
               Array.isArray(extStart)
                 ? project
@@ -91,7 +91,6 @@ export const DimLine: React.FC<
     );
   };
 
-  // ... (下方的 Arrow 與 Label 渲染邏輯完全保持不變) ...
   if (!text && text !== 0) {
     return (
       <g>
@@ -113,6 +112,8 @@ export const DimLine: React.FC<
   const strText = String(text);
   const { width, height } = measureLatex(strText, fontSize);
   const radRot = (rotation * Math.PI) / 180;
+
+  // 計算文字需要的空間大小
   const gap =
     Math.abs(width * Math.cos(angle - radRot)) +
     Math.abs(height * Math.sin(angle - radRot)) +
@@ -128,6 +129,7 @@ export const DimLine: React.FC<
   const midX = pxLabelPos[0];
   const midY = pxLabelPos[1];
 
+  // 斷開模式：計算斷開點
   const p1: Vector2 = [
     midX - halfGap * Math.cos(angle),
     midY - halfGap * Math.sin(angle),
@@ -137,35 +139,64 @@ export const DimLine: React.FC<
     midY + halfGap * Math.sin(angle),
   ];
 
+  // 連續模式：計算文字側邊偏移位置 (往右側法向量推移)
+  let finalLabelX = midX;
+  let finalLabelY = midY;
+
+  if (!breakLine) {
+    const offsetDist =
+      labelObj?.offset !== undefined ? labelObj.offset : gapPadding;
+    // 在 SVG 座標系中，向右的法向量為 (-sin(θ), cos(θ))
+    finalLabelX = midX - offsetDist * Math.sin(angle);
+    finalLabelY = midY + offsetDist * Math.cos(angle);
+  }
+
   return (
     <g>
       {renderExtensions()}
-      {length > gap && (
-        <>
-          <Arrow
-            start={pxStart}
-            end={p1}
-            showStartArrow
-            showEndArrow={false}
-            arrowSize={arrowSize}
-            arrowAngle={arrowAngle}
-            color={color}
-            strokeWidth={strokeWidth}
-          />
-          <Arrow
-            start={p2}
-            end={pxEnd}
-            showStartArrow={false}
-            showEndArrow
-            arrowSize={arrowSize}
-            arrowAngle={arrowAngle}
-            color={color}
-            strokeWidth={strokeWidth}
-          />
-        </>
+
+      {/* 根據 breakLine 決定畫兩段箭頭還是一段長箭頭 */}
+      {breakLine ? (
+        length > gap && (
+          <>
+            <Arrow
+              start={pxStart}
+              end={p1}
+              showStartArrow
+              showEndArrow={false}
+              arrowSize={arrowSize}
+              arrowAngle={arrowAngle}
+              color={color}
+              strokeWidth={strokeWidth}
+            />
+            <Arrow
+              start={p2}
+              end={pxEnd}
+              showStartArrow={false}
+              showEndArrow
+              arrowSize={arrowSize}
+              arrowAngle={arrowAngle}
+              color={color}
+              strokeWidth={strokeWidth}
+            />
+          </>
+        )
+      ) : (
+        <Arrow
+          start={pxStart}
+          end={pxEnd}
+          showStartArrow
+          showEndArrow
+          arrowSize={arrowSize}
+          arrowAngle={arrowAngle}
+          color={color}
+          strokeWidth={strokeWidth}
+        />
       )}
+
+      {/* 繪製文字 */}
       <Label
-        pos={[midX, midY]}
+        pos={[finalLabelX, finalLabelY]}
         text={text}
         color={labelObj?.color || color}
         fontSize={fontSize}

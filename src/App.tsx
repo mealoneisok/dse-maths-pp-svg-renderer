@@ -21,6 +21,8 @@ import {
   PrismPractice_P2_39,
   PyramidWith2DElements,
   FrustumWithWater2012_6,
+  CircularCone2014_p1_14,
+  CircularCone2012_P1_12,
 } from "./components/geometry";
 
 function App() {
@@ -44,6 +46,8 @@ function App() {
         />
       </div>
       <div className="flex flex-col gap-10 w-full items-center">
+        <CircularCone2012_P1_12 />
+        <CircularCone2014_p1_14 />
         <PyramidWith2DElements />
         <FrustumWithWater2012_6 />
         <PrismPractice_P2_39 />

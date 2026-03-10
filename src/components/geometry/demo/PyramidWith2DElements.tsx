@@ -125,7 +125,6 @@
 
 // src/components/geometry/demo/PyramidWith2DElements.tsx
 
-import React from "react";
 import { GeometryFrame3D } from "../GeometryFrame3D";
 import type { Vector3 } from "../../elements";
 
@@ -151,7 +150,6 @@ export const PyramidWith2DElements = () => {
     <div className="flex flex-col items-center justify-center p-8 bg-gray-50 rounded-lg">
       <GeometryFrame3D
         width={350}
-        padding={[20, 30, 20, 30]}
         // 1. 改用 solids 陣列，傳入 LoftedSolid 定義
         solids={[
           {
